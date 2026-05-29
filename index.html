@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ANUA 더마 클레임 검토 대시보드</title>
+<style>
+:root{
+  --navy:#1A1A2E;--navy2:#16213E;
+  --green:#27AE60;--yellow:#F39C12;--red:#E74C3C;--gray:#95A5A6;
+  --bg:#F4F6F8;--card:#FFFFFF;--border:#E0E6ED;
+  --text:#2C3E50;--muted:#7F8C8D;
+  --c-usa:#2980B9;--c-eu:#E67E22;--c-jp:#8E44AD;--c-kr:#27AE60;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",sans-serif;background:var(--bg);color:var(--text);font-size:13px;line-height:1.6}
+
+/* ── HEADER ── */
+.top-header{background:var(--navy);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+.top-header h1{font-size:17px;font-weight:700}
+.top-header h1 span{color:#E94560}
+.top-header .meta{font-size:11px;color:#aaa;text-align:right}
+
+/* ── SUMMARY ── */
+.summary-bar{display:flex;gap:10px;padding:12px 28px;background:var(--navy2);flex-wrap:wrap}
+.stat-chip{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.07);border-radius:8px;padding:6px 14px;color:#fff;font-size:12px;font-weight:600;min-width:100px}
+.stat-chip .num{font-size:20px;font-weight:800;line-height:1}
+.stat-chip.green{border-left:3px solid var(--green)}.stat-chip.yellow{border-left:3px solid var(--yellow)}
+.stat-chip.red{border-left:3px solid var(--red)}.stat-chip.gray{border-left:3px solid var(--gray)}
+.stat-chip.total{border-left:3px solid #7f8fff}
+
+/* ── CONTROLS ── */
+.controls{padding:14px 28px;background:#fff;border-bottom:1px solid var(--border);display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+.control-group{display:flex;flex-direction:column;gap:5px}
+.control-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.btn-group{display:flex;gap:5px;flex-wrap:wrap}
+.btn{border:1.5px solid var(--border);background:#fff;border-radius:20px;padding:4px 12px;font-size:12px;font-family:inherit;cursor:pointer;font-weight:600;color:var(--muted);transition:all .15s}
+.btn:hover{border-color:var(--navy);color:var(--navy)}
+.btn.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.btn[data-country="북미"].active{background:var(--c-usa);border-color:var(--c-usa)}
+.btn[data-country="유럽"].active{background:var(--c-eu);border-color:var(--c-eu)}
+.btn[data-country="일본"].active{background:var(--c-jp);border-color:var(--c-jp)}
+.btn[data-country="한국"].active{background:var(--c-kr);border-color:var(--c-kr)}
+.btn[data-risk="🟢"].active{background:var(--green);border-color:var(--green)}
+.btn[data-risk="🟡"].active{background:var(--yellow);border-color:var(--yellow)}
+.btn[data-risk="🔴"].active{background:var(--red);border-color:var(--red)}
+
+/* ── SYNC BAR ── */
+.sync-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 28px;background:#EEF2FF;border-bottom:2px solid #C7D2FE}
+.sync-bar-left{display:flex;align-items:center;gap:10px}
+.sync-label{font-size:12px;font-weight:700;color:var(--navy)}
+.sync-status{font-size:11px;color:var(--muted);background:#fff;border:1px solid var(--border);border-radius:12px;padding:2px 10px}
+.sync-status.connected{color:var(--green);border-color:var(--green);background:#F0FFF4}
+.sync-bar-right{display:flex;gap:6px;flex-wrap:wrap}
+.sync-btn{border:1.5px solid var(--border);background:#fff;border-radius:8px;padding:5px 13px;font-size:11px;font-family:inherit;cursor:pointer;font-weight:700;color:var(--text);transition:all .15s;display:inline-flex;align-items:center;gap:4px}
+.sync-btn:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.sync-btn.primary{background:var(--navy);color:#fff;border-color:var(--navy)}
+.sync-btn.primary:hover{background:#0f0f22}
+.sync-btn.green-btn{background:var(--green);color:#fff;border-color:var(--green)}
+.sync-btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ── LEGEND ── */
+.legend-bar{padding:9px 28px;display:flex;gap:14px;flex-wrap:wrap;background:#fff;border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);align-items:center}
+.legend-item{display:flex;align-items:center;gap:4px}
+.legend-badge{font-size:11px;font-weight:700;padding:2px 9px;border-radius:10px;white-space:nowrap}
+.lb-green{background:#D6F5D6;color:#1B6B1B}
+.lb-yellow{background:#FFF8CC;color:#7A5F00}
+.lb-red{background:#FFD6D6;color:#8B0000}
+.lb-gray{background:#ECECEC;color:#555}
+
+.results-info{padding:9px 28px;font-size:11px;color:var(--muted)}
+.results-info strong{color:var(--text)}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(440px,1fr));gap:16px;padding:0 28px 40px}
+
+/* ── CARD ── */
+.card{background:var(--card);border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.06);transition:box-shadow .15s,transform .15s;display:flex;flex-direction:column}
+.card:hover{box-shadow:0 4px 18px rgba(0,0,0,.1);transform:translateY(-1px)}
+
+.card-header{padding:11px 15px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--border);background:#FAFBFC;border-radius:12px 12px 0 0}
+.card-header-left{display:flex;align-items:center;gap:7px;flex:1;min-width:0}
+
+.country-badge{font-size:10px;font-weight:800;padding:3px 9px;border-radius:12px;color:#fff;letter-spacing:.3px;white-space:nowrap;flex-shrink:0}
+.country-usa{background:var(--c-usa)}.country-eu{background:var(--c-eu)}
+.country-jp{background:var(--c-jp)}.country-kr{background:var(--c-kr)}.country-jp-x{background:#c0392b}
+.touchpoint{font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Risk counts summary in header */
+.risk-summary{display:flex;gap:4px;flex-shrink:0}
+.rs-chip{font-size:10px;font-weight:700;padding:2px 7px;border-radius:8px;white-space:nowrap}
+.rs-green{background:#D6F5D6;color:#1B6B1B}
+.rs-yellow{background:#FFF8CC;color:#7A5F00}
+.rs-red{background:#FFD6D6;color:#8B0000}
+.rs-gray{background:#ECECEC;color:#777}
+
+.card-body{padding:12px 14px;flex:1;display:flex;flex-direction:column;gap:0}
+.card-section{padding:10px 0}
+.card-section+.card-section{border-top:1px solid var(--border)}
+.section-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+
+/* ── CLAIM ROWS (per-claim edit) ── */
+.claim-rows{display:flex;flex-direction:column;gap:8px}
+
+.claim-row{border-radius:8px;border:1.5px solid var(--border);overflow:hidden;transition:border-color .15s}
+.claim-row.bg-green{border-color:#B8EAC8}
+.claim-row.bg-yellow{border-color:#E8DA80}
+.claim-row.bg-red{border-color:#F0B8B8}
+.claim-row.bg-gray{border-color:#D8E0E8}
+
+.claim-row-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:8px 11px;border-bottom:1px solid var(--border)}
+.claim-row.bg-green .claim-row-header{background:#F0FBF3;border-bottom-color:#CCF0D8}
+.claim-row.bg-yellow .claim-row-header{background:#FDFCE8;border-bottom-color:#EFE8A0}
+.claim-row.bg-red .claim-row-header{background:#FEF5F5;border-bottom-color:#F5CCCC}
+.claim-row.bg-gray .claim-row-header{background:#F8FAFC;border-bottom-color:#E8EEF4}
+
+.claim-text{font-size:12px;line-height:1.5;color:var(--text);flex:1;padding-top:2px}
+.claim-text.banned{text-decoration:line-through;text-decoration-color:#E74C3C;color:#8B0000}
+
+/* Risk badge / dropdown */
+.risk-selector{position:relative;flex-shrink:0}
+.risk-badge{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:10px;cursor:pointer;white-space:nowrap;border:none;font-family:inherit;display:inline-flex;align-items:center;gap:3px;transition:opacity .15s;line-height:1.4}
+.risk-badge:hover{opacity:.8}
+.risk-badge::after{content:"▾";font-size:8px;opacity:.6}
+.risk-green{background:#D6F5D6;color:#1B6B1B}
+.risk-yellow{background:#FFF8CC;color:#7A5F00}
+.risk-red{background:#FFD6D6;color:#8B0000}
+.risk-gray{background:#ECECEC;color:#555}
+
+.risk-dropdown{display:none;position:absolute;right:0;top:calc(100% + 3px);background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.14);overflow:hidden;z-index:300;min-width:135px}
+.risk-dropdown.open{display:block}
+.risk-option{padding:7px 13px;cursor:pointer;font-size:11.5px;font-weight:600;transition:background .1s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.risk-option:hover{background:var(--bg)}
+
+/* Review area inside claim row */
+.claim-review-area{padding:8px 11px 10px}
+.review-textarea{width:100%;min-height:60px;padding:7px 10px;border:1px solid #E0D880;border-radius:7px;background:#FFFDE8;color:#5A4A00;font-size:11.5px;line-height:1.55;font-family:inherit;resize:vertical;outline:none;transition:border-color .15s,box-shadow .15s}
+.review-textarea:focus{border-color:#C8B800;box-shadow:0 0 0 3px rgba(243,156,18,.14)}
+.review-textarea::placeholder{color:#B8A878;font-style:italic}
+.claim-row.bg-green .review-textarea{background:#F6FDF8;border-color:#B8E8C8;color:#1B4A2B}
+.claim-row.bg-green .review-textarea:focus{border-color:#6ACA8A;box-shadow:0 0 0 3px rgba(39,174,96,.12)}
+.claim-row.bg-green .review-textarea::placeholder{color:#8AC8A0}
+.claim-row.bg-red .review-textarea{background:#FEF8F8;border-color:#F0C8C8;color:#6A1B1B}
+.claim-row.bg-red .review-textarea:focus{border-color:#E08080;box-shadow:0 0 0 3px rgba(231,76,60,.1)}
+.claim-row.bg-red .review-textarea::placeholder{color:#C89898}
+
+.review-meta{display:flex;gap:6px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.meta-label{font-size:10px;color:var(--muted);flex-shrink:0}
+.meta-input{border:1px solid var(--border);border-radius:6px;padding:3px 7px;font-size:11px;font-family:inherit;color:var(--text);background:#fff;outline:none;transition:border-color .15s;min-width:0}
+.meta-input:focus{border-color:var(--navy)}
+.meta-input.date-input{width:128px}
+.meta-input.name-input{width:80px}
+.autosave-dot{width:5px;height:5px;border-radius:50%;background:var(--green);display:none;margin-left:auto;flex-shrink:0}
+.autosave-dot.visible{display:block}
+
+/* Evidence */
+.evidence-box{background:#F0F4FF;border-radius:8px;padding:8px 11px;font-size:11.5px;color:#2C3E6A;line-height:1.55}
+
+/* ── COMPETITOR SECTION ── */
+.comp-scroll{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.comp-scroll::-webkit-scrollbar{height:4px}
+.comp-scroll::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+.comp-card{flex:0 0 144px;display:flex;flex-direction:column;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#FAFBFC;transition:box-shadow .12s}
+.comp-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.comp-img-area{width:100%;height:82px;background:#EDF1F5;cursor:pointer;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid var(--border);transition:background .12s}
+.comp-img-area:hover{background:#E0E8EF}
+.comp-img-area img{width:100%;height:100%;object-fit:cover;transition:opacity .15s}
+.comp-img-area:hover img{opacity:.82}
+.comp-img-placeholder{display:flex;flex-direction:column;align-items:center;gap:3px;color:#A0B0C0;font-size:10px;pointer-events:none;user-select:none}
+.comp-img-icon{font-size:20px;opacity:.7}
+.comp-img-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;opacity:0;transition:opacity .15s;background:rgba(0,0,0,.38);pointer-events:none}
+.comp-img-area:hover .comp-img-overlay{opacity:1}
+.comp-overlay-label{color:#fff;font-size:9px;font-weight:700;background:rgba(0,0,0,.45);border-radius:4px;padding:2px 6px}
+.comp-img-remove{position:absolute;top:3px;right:3px;background:rgba(220,50,50,.85);color:#fff;border:none;border-radius:50%;width:17px;height:17px;font-size:12px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;z-index:3;font-family:inherit}
+.comp-img-area:hover .comp-img-remove{opacity:1}
+.comp-info{padding:5px 7px}
+.comp-brand{font-size:10px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px}
+.comp-copy{font-size:9.5px;color:var(--muted);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+/* comp editable inputs */
+.comp-edit-info{padding:5px 7px 6px;display:flex;flex-direction:column;gap:3px}
+.comp-brand-input,.comp-copy-input{width:100%;border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:10px;font-family:inherit;color:var(--text);background:#fff;outline:none;transition:border-color .15s;min-width:0}
+.comp-brand-input{font-weight:700}
+.comp-brand-input:focus,.comp-copy-input:focus{border-color:var(--navy)}
+.comp-brand-input::placeholder,.comp-copy-input::placeholder{color:#B0B8C0;font-style:italic;font-weight:400}
+.comp-slot-del{background:none;border:1px solid #E0D0D0;color:#C0605060;border-radius:4px;padding:2px 0;font-size:10px;cursor:pointer;font-family:inherit;transition:all .12s;text-align:center;margin-top:1px}
+.comp-slot-del:hover{background:#FFE8E8;border-color:#E06060;color:#C03030}
+/* comp add button + label row */
+.comp-label-row{display:flex;align-items:center;justify-content:space-between}
+.comp-add-btn{background:var(--navy);color:#fff;border:none;border-radius:5px;padding:2px 8px;font-size:9.5px;font-family:inherit;cursor:pointer;font-weight:700;transition:background .12s;white-space:nowrap}
+.comp-add-btn:hover{background:#2a2a55}
+
+/* ── LIGHTBOX ── */
+.lightbox{position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center}
+.lightbox-backdrop{position:absolute;inset:0;background:rgba(10,10,20,.88);backdrop-filter:blur(6px);cursor:pointer}
+.lightbox-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:13px;max-width:88vw;max-height:90vh}
+.lightbox-inner img{max-width:80vw;max-height:72vh;object-fit:contain;border-radius:10px;box-shadow:0 10px 50px rgba(0,0,0,.6)}
+.lightbox-meta{text-align:center}
+.lightbox-brand{color:#fff;font-size:14px;font-weight:700;margin-bottom:3px}
+.lightbox-copy-text{color:rgba(255,255,255,.65);font-size:12px}
+.lightbox-close{position:absolute;top:-12px;right:-12px;background:#fff;border:none;border-radius:50%;width:30px;height:30px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.3);z-index:2}
+.lightbox-replace{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:6px;padding:5px 16px;font-size:11px;cursor:pointer;font-family:inherit;transition:background .12s}
+.lightbox-replace:hover{background:rgba(255,255,255,.25)}
+
+/* ── MODAL ── */
+.modal-overlay{position:fixed;inset:0;z-index:8000;display:flex;align-items:center;justify-content:center;background:rgba(10,10,20,.6);backdrop-filter:blur(4px)}
+.modal-box{background:#fff;border-radius:16px;width:min(680px,96vw);max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);display:flex;flex-direction:column}
+.modal-header{padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);position:sticky;top:0;background:#fff;z-index:1}
+.modal-header h2{font-size:15px;font-weight:700;color:var(--navy)}
+.modal-close-btn{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);padding:2px 6px;border-radius:4px;line-height:1}
+.modal-close-btn:hover{background:var(--bg)}
+.modal-body{padding:20px 24px;display:flex;flex-direction:column;gap:18px}
+.modal-section{display:flex;flex-direction:column;gap:8px}
+.modal-section-title{font-size:12px;font-weight:700;color:var(--navy);padding-bottom:4px;border-bottom:1px solid var(--border)}
+.step-list{display:flex;flex-direction:column;gap:6px}
+.step-item{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.5}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--navy);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.url-input-row{display:flex;gap:8px;align-items:center}
+.url-input{flex:1;border:1.5px solid var(--border);border-radius:8px;padding:8px 12px;font-size:12px;font-family:inherit;outline:none;transition:border-color .15s}
+.url-input:focus{border-color:var(--navy)}.url-input.valid{border-color:var(--green)}.url-input.error{border-color:var(--red)}
+.code-block{background:#1E1E2E;border-radius:10px;padding:14px 16px;position:relative;max-height:260px;overflow-y:auto}
+.code-block pre{color:#cdd6f4;font-size:11px;line-height:1.65;font-family:"Consolas","Courier New",monospace;white-space:pre-wrap;word-break:break-all}
+.copy-code-btn{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;padding:3px 10px;font-size:10px;cursor:pointer;font-family:inherit}
+.copy-code-btn:hover{background:rgba(255,255,255,.2)}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;z-index:99999;background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;font-size:12px;font-weight:600;box-shadow:0 4px 16px rgba(0,0,0,.25);opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.success{background:var(--green)}.toast.error{background:var(--red)}.toast.warn{background:var(--yellow);color:#333}
+
+/* ── EMPTY ── */
+.empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
+
+/* ── PRINT ── */
+@media print{
+  .controls,.summary-bar,.sync-bar,.top-header{position:static}
+  .card{break-inside:avoid;box-shadow:none}
+  .grid{grid-template-columns:1fr 1fr}
+  body{background:#fff}
+  .lightbox,.modal-overlay,.toast{display:none!important}
+  .review-textarea{border:1px solid #ccc;resize:none}
+  .comp-img-remove{display:none}
+}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="top-header">
+  <h1>🧬 <span>ANUA</span> 더마 클레임 검토 대시보드</h1>
+  <div class="meta">국가별 · 접점별 더마 마케팅 문안 RA 검토 현황<br>기준일: 2026년 5월</div>
+</div>
+
+<div class="summary-bar">
+  <div class="stat-chip total"><div><div class="num" id="stat-total">0</div><div>전체 문안</div></div></div>
+  <div class="stat-chip green"><div><div class="num" id="stat-green">0</div><div>🟢 통과</div></div></div>
+  <div class="stat-chip yellow"><div><div class="num" id="stat-yellow">0</div><div>🟡 조건부</div></div></div>
+  <div class="stat-chip red"><div><div class="num" id="stat-red">0</div><div>🔴 불통</div></div></div>
+  <div class="stat-chip gray"><div><div class="num" id="stat-pending">0</div><div>⬜ 미검토</div></div></div>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <div class="control-label">국가</div>
+    <div class="btn-group" id="countryFilters">
+      <button class="btn active" data-country="ALL">전체</button>
+      <button class="btn" data-country="북미">🇺🇸 북미</button>
+      <button class="btn" data-country="유럽">🇪🇺 유럽</button>
+      <button class="btn" data-country="일본">🇯🇵 일본</button>
+      <button class="btn" data-country="한국">🇰🇷 한국</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="control-label">고객 접점</div>
+    <div class="btn-group" id="touchpointFilters">
+      <button class="btn active" data-touchpoint="ALL">전체</button>
+      <button class="btn" data-touchpoint="제품 패키지">📦 패키지</button>
+      <button class="btn" data-touchpoint="브랜드 공식 홈페이지">🌐 홈페이지</button>
+      <button class="btn" data-touchpoint="온라인 판매 상세페이지">🛒 PDP</button>
+      <button class="btn" data-touchpoint="오프라인 VMD">🏪 VMD</button>
+    </div>
+  </div>
+  <div class="control-group">
+    <div class="control-label">리스크 필터 <span style="font-weight:400;text-transform:none;letter-spacing:0">(해당 문안 포함 카드)</span></div>
+    <div class="btn-group" id="riskFilters">
+      <button class="btn active" data-risk="ALL">전체</button>
+      <button class="btn" data-risk="🟢">🟢 통과</button>
+      <button class="btn" data-risk="🟡">🟡 조건부</button>
+      <button class="btn" data-risk="🔴">🔴 불통</button>
+      <button class="btn" data-risk="⬜">⬜ 미검토</button>
+    </div>
+  </div>
+  <div class="control-group" style="margin-left:auto;flex-direction:row;align-items:flex-end;gap:6px">
+    <button class="btn" onclick="window.print()">🖨️ 인쇄/PDF</button>
+  </div>
+</div>
+
+<div class="sync-bar">
+  <div class="sync-bar-left">
+    <span class="sync-label">🔗 Google Sheets 연동</span>
+    <span class="sync-status" id="syncStatus">연동 미설정</span>
+  </div>
+  <div class="sync-bar-right">
+    <button class="sync-btn" onclick="syncFromSheets()" id="btnDown">⬇ Sheets에서 받기</button>
+    <button class="sync-btn primary" onclick="syncToSheets()" id="btnUp">⬆ Sheets에 올리기</button>
+    <button class="sync-btn green-btn" onclick="exportCSV()">📊 CSV 내보내기</button>
+    <button class="sync-btn" onclick="openSyncModal()">⚙ 연동 설정</button>
+  </div>
+</div>
+
+<div class="legend-bar">
+  <span style="font-weight:700;color:var(--text)">신호등 기준</span>
+  <div class="legend-item"><span class="legend-badge lb-green">🟢 통과</span> 현재 문안 사용 가능</div>
+  <div class="legend-item"><span class="legend-badge lb-yellow">🟡 조건부</span> 조건 충족 후 가능</div>
+  <div class="legend-item"><span class="legend-badge lb-red">🔴 불통</span> 대체 문안 필요</div>
+  <div class="legend-item"><span class="legend-badge lb-gray">⬜ 미검토</span> 검토 대기</div>
+  <div class="legend-item" style="margin-left:auto;font-size:10px;color:var(--green)">✏️ 문안별 신호등·검토 의견 직접 수정 · 자동 저장</div>
+</div>
+
+<div class="results-info">표시 중: <strong id="visibleCount">0</strong>개 카드 · <strong id="visibleClaims">0</strong>개 문안</div>
+<div class="grid" id="cardGrid"></div>
+
+<!-- SYNC MODAL -->
+<div id="syncModal" class="modal-overlay" style="display:none">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>⚙ Google Sheets 연동 설정</h2>
+      <button class="modal-close-btn" onclick="closeSyncModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">① Apps Script URL 입력</div>
+        <div class="url-input-row">
+          <input type="url" class="url-input" id="appsScriptUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+          <button class="sync-btn primary" onclick="saveAndTestUrl()">연결 테스트</button>
+        </div>
+        <div id="urlTestResult" style="font-size:11px;margin-top:4px;color:var(--muted)"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">② Google Apps Script 설정 방법</div>
+        <div class="step-list">
+          <div class="step-item"><span class="step-num">1</span><span>Google 스프레드시트를 새로 만들거나 기존 파일 열기</span></div>
+          <div class="step-item"><span class="step-num">2</span><span><b>확장 프로그램 → Apps Script</b> 클릭</span></div>
+          <div class="step-item"><span class="step-num">3</span><span>아래 코드 전체 복사 후 붙여넣기 (기존 내용 모두 삭제 후)</span></div>
+          <div class="step-item"><span class="step-num">4</span><span><b>배포 → 새 배포 → 유형: 웹 앱</b> 선택</span></div>
+          <div class="step-item"><span class="step-num">5</span><span>실행 계정: <b>나</b> / 액세스 권한: <b>모든 사용자</b> 설정 후 배포</span></div>
+          <div class="step-item"><span class="step-num">6</span><span>생성된 웹 앱 URL을 위 입력란에 붙여넣기</span></div>
+        </div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">③ Apps Script 코드</div>
+        <div class="code-block">
+          <button class="copy-code-btn" onclick="copyAppsScriptCode()">복사</button>
+          <pre id="appsScriptCode">function doGet(e) {
+  var action = e.parameter.action || 'getReviews';
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (action === 'getReviews') {
+    var sh = ss.getSheetByName('검토현황') || ss.insertSheet('검토현황');
+    return sheetToJson(sh, 'reviews');
+  }
+  if (action === 'getComps') {
+    var sh = ss.getSheetByName('타사레퍼런스');
+    if (!sh) return out({type:'comps', rows:[]});
+    return sheetToJson(sh, 'comps');
+  }
+  return out({error:'unknown action'});
+}
+
+function doPost(e) {
+  var body = JSON.parse(e.postData.contents);
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (body.type === 'reviews') {
+    var sh = ss.getSheetByName('검토현황') || ss.insertSheet('검토현황');
+    var labels = ['국가','접점','문안번호','문안','리스크','검토의견','담당자','검토일'];
+    var keys   = ['country','touchpoint','claimIdx','claim','risk','review','reviewer','date'];
+    return writeSheet(sh, labels, keys, body.rows);
+  }
+  if (body.type === 'comps') {
+    var sh = ss.getSheetByName('타사레퍼런스') || ss.insertSheet('타사레퍼런스');
+    var labels = ['국가','접점','슬롯번호','브랜드','클레임문구'];
+    var keys   = ['country','touchpoint','slotIdx','brand','copy'];
+    return writeSheet(sh, labels, keys, body.rows);
+  }
+  return out({error:'unknown type'});
+}
+
+function sheetToJson(sh, type) {
+  var data = sh.getDataRange().getValues();
+  if (data.length <= 1) return out({type:type, rows:[]});
+  var headers = data[0];
+  var rows = data.slice(1).map(function(r) {
+    var obj = {};
+    headers.forEach(function(h,i){ obj[h] = r[i]!=null?String(r[i]):''; });
+    return obj;
+  });
+  return out({type:type, rows:rows});
+}
+
+function writeSheet(sh, labels, keys, rows) {
+  sh.clearContents();
+  sh.getRange(1,1,1,labels.length).setValues([labels]);
+  if (rows && rows.length) {
+    var vals = rows.map(function(r){
+      return keys.map(function(k){ return r[k]!=null?String(r[k]):''; });
+    });
+    sh.getRange(2,1,vals.length,keys.length).setValues(vals);
+  }
+  return out({status:'ok', count:(rows||[]).length});
+}
+
+function out(data) {
+  return ContentService
+    .createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+        </div>
+      </div>
+      <div class="modal-section" style="background:#FFF8E1;border-radius:8px;padding:12px;font-size:11.5px;color:#7A5F00;line-height:1.6">
+        <b>💡 참고</b><br>
+        편집 시 <b>자동으로 Sheets에 반영</b>됩니다 (약 2초 딜레이). 페이지를 열면 Sheets에서 자동으로 불러옵니다.<br>
+        이미지(사진)는 기기 로컬에만 저장되며 공유되지 않습니다. 연동 오류 시 <b>CSV 내보내기</b>를 이용하세요.
+      </div>
+      <div class="modal-section" style="border:1.5px solid #6366F1;border-radius:10px;padding:16px 18px;background:#EEF2FF">
+        <div class="modal-section-title" style="color:#4338CA;border-color:#C7D2FE">🌐 대시보드 외부 배포 — 팀 전체가 URL로 접근</div>
+        <div style="font-size:12px;line-height:1.75;color:var(--text)">
+          <div style="font-weight:700;margin-bottom:4px">방법 A. GitHub Pages <span style="font-size:10px;color:#6366F1;background:#E0E7FF;border-radius:4px;padding:1px 6px;font-weight:600">무료 · 권장</span></div>
+          <div class="step-list">
+            <div class="step-item"><span class="step-num" style="background:#24292E;font-size:9px">1</span><span><a href="https://github.com" target="_blank" style="color:#4338CA">github.com</a> 에서 새 리포지터리 생성 (예: <code style="background:#F1F5F9;padding:1px 5px;border-radius:3px">anua-derma</code>)</span></div>
+            <div class="step-item"><span class="step-num" style="background:#24292E;font-size:9px">2</span><span>이 HTML 파일을 <b>index.html</b> 로 이름 변경 후 업로드</span></div>
+            <div class="step-item"><span class="step-num" style="background:#24292E;font-size:9px">3</span><span>Settings → Pages → Branch: <b>main</b> → Save</span></div>
+            <div class="step-item"><span class="step-num" style="background:#24292E;font-size:9px">4</span><span><code style="background:#F1F5F9;padding:1px 5px;border-radius:3px">https://[계정명].github.io/anua-derma</code> 를 팀에 공유</span></div>
+          </div>
+          <div style="font-weight:700;margin:10px 0 4px">방법 B. Netlify Drop <span style="font-size:10px;color:#00AD9F;background:#E6FFFD;border-radius:4px;padding:1px 6px;font-weight:600">계정 불필요 · 즉시</span></div>
+          <div class="step-list">
+            <div class="step-item"><span class="step-num" style="background:#00AD9F;font-size:9px">1</span><span><a href="https://app.netlify.com/drop" target="_blank" style="color:#4338CA">app.netlify.com/drop</a> 접속</span></div>
+            <div class="step-item"><span class="step-num" style="background:#00AD9F;font-size:9px">2</span><span>HTML 파일을 드래그앤드롭 → 즉시 공개 URL 발급</span></div>
+          </div>
+          <div style="margin-top:10px;background:#FEF3C7;border-radius:6px;padding:8px 11px;font-size:11px;color:#92400E">
+            ⚠️ 배포 후 모든 접속자가 <b>⚙ 연동 설정</b>에서 동일한 Apps Script URL 입력 필요 (최초 1회).<br>이후 접속부터 Sheets 데이터가 자동으로 로드됩니다.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" class="lightbox" style="display:none">
+  <div class="lightbox-backdrop" id="lbBackdrop"></div>
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lbClose">✕</button>
+    <img id="lbImg" src="" alt="">
+    <div class="lightbox-meta">
+      <div class="lightbox-brand" id="lbBrand"></div>
+      <div class="lightbox-copy-text" id="lbCopy"></div>
+    </div>
+    <button class="lightbox-replace" id="lbReplace">🔄 사진 교체</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+<input type="file" id="fileInput" accept="image/*" style="display:none">
+
+<script>
+// ═══════════════════════════════════════════
+// STATIC DATA
+// ═══════════════════════════════════════════
+const DATA = [
+  {country:"북미",countryCode:"usa",touchpoint:"제품 패키지",
+   claims:["① Co-developed with Dermatologists","② Developed with Dermatologist Advisors","③ Dermatologist-tested"],
+   evidence:"피부과 전문의 계약서, 공동개발 Scope, 자문 회의록, 피드백 반영 내역, 테스트 결과 보고서"},
+  {country:"북미",countryCode:"usa",touchpoint:"브랜드 공식 홈페이지",
+   claims:["① ANUA Board of Dermatologists","② Dermatologist Advisory Board","③ Dermatologist-backed Skin Science"],
+   evidence:"보드 멤버 위촉 계약서, headshot/bio 사용권, 자문단 역할 정의, 보상관계 표시 필요 여부"},
+  {country:"북미",countryCode:"usa",touchpoint:"온라인 판매 상세페이지",
+   claims:["① Dermatologist Insight","② Recommended by Dr. [Name], Board-Certified Dermatologist","③ Recommended by Dermatologists"],
+   evidence:"Quote 원문 승인본, 제품 검토 이력, claim substantiation 자료, paid/sponsored disclosure 필요 여부"},
+  {country:"북미",countryCode:"usa",touchpoint:"오프라인 VMD",
+   claims:["① Dermatologist Insight Zone","② Dermatologist-Recommended Routine","③ Dermatologist-tested Skincare Routine"],
+   evidence:"VMD 사용권, headshot/quote 사용권, 리테일러별 표시 기준, 보상관계 고지 필요 여부"},
+  {country:"유럽",countryCode:"eu",touchpoint:"제품 패키지",
+   claims:["① Développé avec des dermatologues (피부과 전문의와 함께 개발)","② Testé sous contrôle dermatologique (피부과학적 관리하에 테스트 완료)","③ Dermatologically Tested"],
+   evidence:"피부과 전문의 협업 증빙, 테스트 결과, 계약서"},
+  {country:"유럽",countryCode:"eu",touchpoint:"브랜드 공식 홈페이지",
+   claims:["① Comité de dermatologues ANUA (ANUA 피부과 전문의 위원회)","② Comité consultatif dermatologique (피부과학 자문 위원회)","③ ANUA Dermatologist Advisory Board"],
+   evidence:"보드 멤버 위촉 계약서, 자문단 역할 정의, 보상관계 표시 여부"},
+  {country:"유럽",countryCode:"eu",touchpoint:"온라인 판매 상세페이지",
+   claims:["① Avis de dermatologue (피부과 전문의 의견)","② Recommandé par des dermatologues (피부과 전문의 추천)","③ Dermatologist Insight"],
+   evidence:"Quote 원문 승인본, paid/sponsored disclosure 필요 여부"},
+  {country:"유럽",countryCode:"eu",touchpoint:"오프라인 VMD",
+   claims:["① Routine recommandée par des dermatologues (피부과 전문의 추천 루틴)","② Routine testée dermatologiquement (피부과학적으로 테스트된 루틴)","③ Dermatologically Tested Routine"],
+   evidence:"리테일러별 표시 기준별 근거 자료"},
+  {country:"일본",countryCode:"jp",touchpoint:"제품 패키지",
+   claims:["① 皮膚科学の知見に基づき開発 (피부과학의 지견에 기반해 개발)","② 専門家監修のもとテスト済み (전문가 감수하에 테스트 완료)","③ 皮膚科学に基づく処方 (피부과학에 기반한 처방)"],
+   evidence:"전문가 감수 계약서, 테스트 결과 보고서"},
+  {country:"일본",countryCode:"jp",touchpoint:"브랜드 공식 홈페이지",
+   claims:["① 皮膚科学アドバイザリーボード (피부과학 자문단)","② 皮膚科学の専門家による知見 (피부과학 전문가에 의한 지견)","③ 皮膚の専門家と協力して開発 (피부 전문가와 협력하여 개발)"],
+   evidence:"전문가 위촉 계약서, 자문 이력, 역할 정의"},
+  {country:"일본",countryCode:"jp",touchpoint:"온라인 판매 상세페이지",
+   claims:["① Skin Science Insight","② 皮膚科学の視点から見た製品特長 (피부과학 관점에서 본 제품 특징)","③ テスト結果に基づく製品特長 (테스트 결과에 기반한 제품 특징)"],
+   evidence:"테스트 결과 보고서, 객관적 데이터 백업"},
+  {country:"일본",countryCode:"jp",touchpoint:"오프라인 VMD",
+   claims:["① 皮膚科学に基づく処方 (피부과학에 기반한 처방)","② 敏感肌テスト済み (민감성 피부 테스트 완료)","③ 低刺激設計 (저자극 설계)"],
+   evidence:"테스트 결과 보고서, 리테일러별 가이드"},
+  {country:"일본",countryCode:"jp-x",touchpoint:"⚠️ 절대 불가 문안",banned:true,
+   claims:["皮膚科医推奨 (피부과의사 추천)","皮膚科医と共同開発 (피부과의사와 공동개발)","의사 실명/사진 + 제품 추천 Quote"],
+   evidence:"일본 약사법 제66조 (허위·과대광고 금지), 후생노동성 가이드라인",
+   defaultRisk:"🔴",
+   defaultReview:"약사법 위반 소지 — 의사가 특정 제품을 추천하는 표현은 일본 약사법상 금지. 대체 문안 사용 필요.",
+   defaultReviewer:"RA"},
+  {country:"한국",countryCode:"kr",touchpoint:"제품 패키지",
+   claims:["① 피부과 전문의 자문을 거쳐 개발","② 피부과 전문의 공동 개발","③ 피부과학 기반 처방"],
+   evidence:"자문 계약서, 자문 회의록"},
+  {country:"한국",countryCode:"kr",touchpoint:"브랜드 공식 홈페이지",
+   claims:["① ANUA 피부과 전문의 자문단","② ANUA 피부과학 자문단","③ 피부 전문가 자문 네트워크"],
+   evidence:"자문단 위촉 계약서, headshot/bio 사용권"},
+  {country:"한국",countryCode:"kr",touchpoint:"온라인 판매 상세페이지",
+   claims:["① 피부과 전문의 인사이트","② 피부 전문가 코멘트","③ 전문가 검토 포인트"],
+   evidence:"Quote 원문 승인본, 전문가 보상관계 고지 여부"},
+  {country:"한국",countryCode:"kr",touchpoint:"오프라인 VMD",
+   claims:["① 피부과 전문의 자문 기반 더마 루틴","② 피부과학 기반 더마 루틴","③ 피부 테스트 완료 루틴"],
+   evidence:"VMD 사용권, 리테일러별 표시 기준"},
+];
+
+// (competitor data is now user-editable via compStore below)
+
+// ═══════════════════════════════════════════
+// REVIEW STORE  — per-claim  (국가__접점__idx)
+// ═══════════════════════════════════════════
+const STORE_KEY = "dermaReviewStore_v3"; // new key → fresh start
+
+function storeKey(country, touchpoint, claimIdx) {
+  return country + "__" + touchpoint + "__" + claimIdx;
+}
+
+let reviewStore = {};
+try { reviewStore = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch {}
+
+function getReview(d, claimIdx) {
+  const k    = storeKey(d.country, d.touchpoint, claimIdx);
+  const saved = reviewStore[k] || {};
+  const defRisk   = d.banned ? "🔴" : "⬜";
+  const defReview = d.banned ? (d.defaultReview  || "") : "";
+  const defReviewer = d.banned ? (d.defaultReviewer || "") : "";
+  return {
+    risk:     saved.risk     !== undefined ? saved.risk     : defRisk,
+    review:   saved.review   !== undefined ? saved.review   : defReview,
+    reviewer: saved.reviewer !== undefined ? saved.reviewer : defReviewer,
+    date:     saved.date     !== undefined ? saved.date     : "",
+  };
+}
+
+let saveTimer = null;
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(reviewStore)); }
+    catch { showToast("저장 실패 (용량 초과)", "error"); return; }
+    if (appsScriptUrl) {
+      scheduleSheetsPush(); // Sheets 자동 동기화
+    } else {
+      showToast("💾 로컬 저장됨", "success");
+    }
+  }, 700);
+}
+
+function updateField(country, touchpoint, claimIdx, field, value) {
+  const k = storeKey(country, touchpoint, claimIdx);
+  if (!reviewStore[k]) reviewStore[k] = {};
+  reviewStore[k][field] = value;
+  scheduleSave();
+}
+
+// ═══════════════════════════════════════════
+// RISK HELPERS
+// ═══════════════════════════════════════════
+const RISK_OPTIONS = [
+  {v:"🟢",l:"🟢 통과",  cls:"risk-green", bg:"bg-green"},
+  {v:"🟡",l:"🟡 조건부",cls:"risk-yellow",bg:"bg-yellow"},
+  {v:"🔴",l:"🔴 불통",  cls:"risk-red",   bg:"bg-red"},
+  {v:"⬜",l:"⬜ 미검토",cls:"risk-gray",  bg:"bg-gray"},
+];
+
+function riskInfo(r) {
+  const v = Array.from(r||"⬜")[0];
+  return RISK_OPTIONS.find(o => o.v === v) || RISK_OPTIONS[3];
+}
+
+function normalize(r) {
+  if (!r || r.startsWith("⬜")) return "⬜";
+  return Array.from(r)[0];
+}
+
+function countryLabel(c) {
+  return {북미:"🇺🇸 북미",유럽:"🇪🇺 유럽",일본:"🇯🇵 일본",한국:"🇰🇷 한국"}[c] || c;
+}
+
+// ═══════════════════════════════════════════
+// COMPETITOR SECTION — 자유 입력 슬롯 방식
+// ═══════════════════════════════════════════
+const COMP_STORE_KEY = "dermaCompStore_v1";
+const COMP_DEFAULT_COUNT = 4;
+const COMP_MAX_COUNT = 8;
+
+let compStore = {};
+try { compStore = JSON.parse(localStorage.getItem(COMP_STORE_KEY)) || {}; } catch {}
+
+function compKey(country, touchpoint) { return country + "__" + touchpoint; }
+
+function getSlots(country, touchpoint) {
+  const k = compKey(country, touchpoint);
+  if (!compStore[k]) {
+    compStore[k] = Array.from({length: COMP_DEFAULT_COUNT}, () => ({brand:"", copy:""}));
+  }
+  return compStore[k];
+}
+
+function saveCompStore() {
+  try { localStorage.setItem(COMP_STORE_KEY, JSON.stringify(compStore)); }
+  catch { showToast("타사 정보 저장 실패 (용량 초과)", "error"); }
+  if (appsScriptUrl) scheduleSheetsPush();
+}
+
+// Image keyed by slot index (not brand name)
+function imgKey(country, touchpoint, slotIdx) {
+  return "dermaImg__" + country + "__" + touchpoint + "__" + slotIdx;
+}
+function getImg(c, t, idx) { try { return localStorage.getItem(imgKey(c, t, idx)); } catch { return null; } }
+function setImg(c, t, idx, url) { try { localStorage.setItem(imgKey(c, t, idx), url); } catch { showToast("이미지 저장 실패(용량 초과)", "error"); } }
+function removeImg(c, t, idx) { try { localStorage.removeItem(imgKey(c, t, idx)); } catch {} }
+
+function deleteCompSlot(country, touchpoint, delIdx) {
+  const k = compKey(country, touchpoint);
+  const slots = getSlots(country, touchpoint);
+  // Remove image at deleted slot, shift remaining images down
+  removeImg(country, touchpoint, delIdx);
+  for (let i = delIdx; i < slots.length - 1; i++) {
+    const src = getImg(country, touchpoint, i + 1);
+    if (src) setImg(country, touchpoint, i, src);
+    else removeImg(country, touchpoint, i);
+  }
+  removeImg(country, touchpoint, slots.length - 1);
+  compStore[k].splice(delIdx, 1);
+  saveCompStore();
+}
+
+function addCompSlot(country, touchpoint) {
+  const k = compKey(country, touchpoint);
+  getSlots(country, touchpoint);
+  if (compStore[k].length >= COMP_MAX_COUNT) {
+    showToast("최대 " + COMP_MAX_COUNT + "개까지 추가 가능합니다", "warn");
+    return false;
+  }
+  compStore[k].push({brand:"", copy:""});
+  saveCompStore();
+  return true;
+}
+
+function updateCompSlotField(country, touchpoint, slotIdx, field, value) {
+  const k = compKey(country, touchpoint);
+  getSlots(country, touchpoint);
+  if (compStore[k][slotIdx]) compStore[k][slotIdx][field] = value;
+  saveCompStore();
+}
+
+function buildCompCard(country, touchpoint, slotIdx) {
+  const slots = getSlots(country, touchpoint);
+  const slot  = slots[slotIdx] || {brand:"", copy:""};
+  const src   = getImg(country, touchpoint, slotIdx);
+  const esc   = s => String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+  const ikey  = imgKey(country, touchpoint, slotIdx);
+
+  const imgInner = src
+    ? `<img src="${src}" alt="${esc(slot.brand)}">
+       <div class="comp-img-overlay">
+         <span class="comp-overlay-label">🔍 크게 보기</span>
+         <span class="comp-overlay-label" style="font-size:9px;opacity:.8">클릭하여 교체</span>
+       </div>
+       <button class="comp-img-remove"
+         data-key="${esc(ikey)}" data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}" data-slot-idx="${slotIdx}" title="사진 삭제">✕</button>`
+    : `<div class="comp-img-placeholder"><span class="comp-img-icon">📷</span><span>사진 추가</span></div>`;
+
+  return `<div class="comp-card">
+    <div class="comp-img-area"
+      data-key="${esc(ikey)}" data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}"
+      data-slot-idx="${slotIdx}" data-has-img="${src ? '1' : '0'}">${imgInner}</div>
+    <div class="comp-info comp-edit-info">
+      <input class="comp-brand-input" type="text" placeholder="브랜드명"
+        value="${esc(slot.brand)}"
+        data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}" data-slot-idx="${slotIdx}" data-field="brand">
+      <input class="comp-copy-input" type="text" placeholder="클레임 문구"
+        value="${esc(slot.copy)}"
+        data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}" data-slot-idx="${slotIdx}" data-field="copy">
+      <button class="comp-slot-del"
+        data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}" data-slot-idx="${slotIdx}">✕ 삭제</button>
+    </div>
+  </div>`;
+}
+
+function buildCompSection(country, touchpoint) {
+  const esc   = s => String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+  const slots = getSlots(country, touchpoint);
+  const cards = slots.map((_, i) => buildCompCard(country, touchpoint, i)).join("");
+  return `<div class="card-section comp-section" data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}">
+    <div class="section-label comp-label-row">
+      📸 타사 사례 레퍼런스
+      <button class="comp-add-btn" data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}">+ 추가</button>
+    </div>
+    <div class="comp-scroll">${cards}</div>
+  </div>`;
+}
+
+function rerenderCompSection(country, touchpoint) {
+  document.querySelectorAll(".comp-section").forEach(sec => {
+    if (sec.dataset.country === country && sec.dataset.touchpoint === touchpoint) {
+      sec.outerHTML = buildCompSection(country, touchpoint);
+    }
+  });
+}
+
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+let filterState = {country:"ALL",touchpoint:"ALL",risk:"ALL"};
+
+function renderCards() {
+  const grid = document.getElementById("cardGrid");
+
+  const filtered = DATA.filter(d => {
+    if (filterState.country    !== "ALL" && d.country    !== filterState.country)    return false;
+    if (filterState.touchpoint !== "ALL" && d.touchpoint !== filterState.touchpoint) return false;
+    if (filterState.risk !== "ALL") {
+      // show card if ANY claim matches the selected risk
+      return d.claims.some((_,i) => normalize(getReview(d,i).risk) === filterState.risk);
+    }
+    return true;
+  });
+
+  // Count per-claim across filtered cards
+  const counts = {"🟢":0,"🟡":0,"🔴":0,"⬜":0};
+  let totalClaims = 0;
+  filtered.forEach(d => d.claims.forEach((_,i) => {
+    counts[normalize(getReview(d,i).risk)]++;
+    totalClaims++;
+  }));
+
+  document.getElementById("stat-total").textContent   = totalClaims;
+  document.getElementById("stat-green").textContent   = counts["🟢"];
+  document.getElementById("stat-yellow").textContent  = counts["🟡"];
+  document.getElementById("stat-red").textContent     = counts["🔴"];
+  document.getElementById("stat-pending").textContent = counts["⬜"];
+  document.getElementById("visibleCount").textContent = filtered.length;
+  document.getElementById("visibleClaims").textContent = totalClaims;
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><div>선택한 조건에 해당하는 항목이 없습니다.</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map(d => buildCard(d)).join("");
+}
+
+function buildCard(d) {
+  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+
+  // Header: risk summary chips
+  const riskCounts = {"🟢":0,"🟡":0,"🔴":0,"⬜":0};
+  d.claims.forEach((_,i) => riskCounts[normalize(getReview(d,i).risk)]++);
+  const summaryChips = RISK_OPTIONS
+    .filter(o => riskCounts[o.v] > 0)
+    .map(o => {
+      const cls = {
+        "🟢":"rs-green","🟡":"rs-yellow","🔴":"rs-red","⬜":"rs-gray"
+      }[o.v];
+      return `<span class="rs-chip ${cls}">${o.v} ${riskCounts[o.v]}</span>`;
+    }).join("");
+
+  // Claim rows
+  const claimRowsHTML = d.claims.map((claim, idx) => {
+    const rv  = getReview(d, idx);
+    const ri  = riskInfo(rv.risk);
+    const dotId = `dot-${esc(d.country)}-${d.touchpoint.replace(/[\s⚠️]/g,"_")}-${idx}`;
+    const riskOpts = RISK_OPTIONS.map(o =>
+      `<button class="risk-option" data-country="${esc(d.country)}" data-touchpoint="${esc(d.touchpoint)}" data-claim-idx="${idx}" data-value="${o.v}">${o.l}</button>`
+    ).join("");
+
+    return `
+    <div class="claim-row ${ri.bg}">
+      <div class="claim-row-header">
+        <div class="claim-text${d.banned?" banned":""}">${claim}</div>
+        <div class="risk-selector">
+          <button class="risk-badge ${ri.cls}"
+            data-country="${esc(d.country)}" data-touchpoint="${esc(d.touchpoint)}" data-claim-idx="${idx}">${ri.l}</button>
+          <div class="risk-dropdown">${riskOpts}</div>
+        </div>
+      </div>
+      <div class="claim-review-area">
+        <textarea class="review-textarea"
+          data-country="${esc(d.country)}" data-touchpoint="${esc(d.touchpoint)}" data-claim-idx="${idx}"
+          placeholder="이 문안에 대한 RA 검토 의견을 입력하세요...">${rv.review}</textarea>
+        <div class="review-meta">
+          <span class="meta-label">👤</span>
+          <input class="meta-input name-input" type="text"
+            data-country="${esc(d.country)}" data-touchpoint="${esc(d.touchpoint)}" data-claim-idx="${idx}" data-field="reviewer"
+            placeholder="담당자" value="${esc(rv.reviewer)}">
+          <span class="meta-label">📅</span>
+          <input class="meta-input date-input" type="date"
+            data-country="${esc(d.country)}" data-touchpoint="${esc(d.touchpoint)}" data-claim-idx="${idx}" data-field="date"
+            value="${esc(rv.date)}">
+          <span class="autosave-dot" id="${dotId}"></span>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+
+  const compHTML = buildCompSection(d.country, d.touchpoint);
+
+  return `<div class="card">
+    <div class="card-header">
+      <div class="card-header-left">
+        <span class="country-badge country-${d.countryCode}">${countryLabel(d.country)}</span>
+        <span class="touchpoint">${d.touchpoint}</span>
+      </div>
+      <div class="risk-summary">${summaryChips}</div>
+    </div>
+    <div class="card-body">
+      <div class="card-section">
+        <div class="section-label">후보 문안 &amp; RA 검토 의견</div>
+        <div class="claim-rows">${claimRowsHTML}</div>
+      </div>
+      ${compHTML}
+      ${d.evidence ? `<div class="card-section"><div class="section-label">백업 필요한 근거자료</div><div class="evidence-box">📋 ${d.evidence}</div></div>` : ""}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════
+// EDITING — event delegation
+// ═══════════════════════════════════════════
+document.getElementById("cardGrid").addEventListener("input", e => {
+  // RA 검토 텍스트에리어
+  const ta = e.target.closest("textarea.review-textarea");
+  if (ta) {
+    const {country, touchpoint} = ta.dataset;
+    const idx = parseInt(ta.dataset.claimIdx);
+    updateField(country, touchpoint, idx, "review", ta.value);
+    flashDot(country, touchpoint, idx);
+    return;
+  }
+  // 담당자/날짜 meta 입력
+  const inp = e.target.closest("input.meta-input");
+  if (inp) {
+    const {country, touchpoint, field} = inp.dataset;
+    const idx = parseInt(inp.dataset.claimIdx);
+    updateField(country, touchpoint, idx, field, inp.value);
+    flashDot(country, touchpoint, idx);
+    return;
+  }
+  // 타사 사례 브랜드명/클레임 직접 입력
+  const compInp = e.target.closest(".comp-brand-input, .comp-copy-input");
+  if (compInp) {
+    const {country, touchpoint, field} = compInp.dataset;
+    const slotIdx = parseInt(compInp.dataset.slotIdx);
+    updateCompSlotField(country, touchpoint, slotIdx, field, compInp.value);
+  }
+});
+
+function flashDot(country, touchpoint, idx) {
+  const id  = `dot-${country}-${touchpoint.replace(/[\s⚠️]/g,"_")}-${idx}`;
+  const dot = document.getElementById(id);
+  if (!dot) return;
+  dot.classList.add("visible");
+  clearTimeout(dot._t);
+  dot._t = setTimeout(() => dot.classList.remove("visible"), 2000);
+}
+
+// Risk dropdown
+document.getElementById("cardGrid").addEventListener("click", e => {
+  // Risk badge toggle
+  const badge = e.target.closest("button.risk-badge");
+  if (badge) {
+    e.stopPropagation();
+    const dd = badge.nextElementSibling;
+    const wasOpen = dd.classList.contains("open");
+    document.querySelectorAll(".risk-dropdown.open").forEach(x => x.classList.remove("open"));
+    if (!wasOpen) dd.classList.add("open");
+    return;
+  }
+
+  // Risk option select
+  const opt = e.target.closest("button.risk-option");
+  if (opt) {
+    e.stopPropagation();
+    const {country, touchpoint, value} = opt.dataset;
+    const idx = parseInt(opt.dataset.claimIdx);
+    updateField(country, touchpoint, idx, "risk", value);
+    renderCards();
+    return;
+  }
+
+  if (!e.target.closest(".risk-selector")) {
+    document.querySelectorAll(".risk-dropdown.open").forEach(x => x.classList.remove("open"));
+  }
+
+  // Competitor: 슬롯 추가
+  const addBtn = e.target.closest(".comp-add-btn");
+  if (addBtn) {
+    e.stopPropagation();
+    const {country, touchpoint} = addBtn.dataset;
+    if (addCompSlot(country, touchpoint)) rerenderCompSection(country, touchpoint);
+    return;
+  }
+
+  // Competitor: 슬롯 삭제
+  const delBtn = e.target.closest(".comp-slot-del");
+  if (delBtn) {
+    e.stopPropagation();
+    const {country, touchpoint} = delBtn.dataset;
+    const slotIdx = parseInt(delBtn.dataset.slotIdx);
+    deleteCompSlot(country, touchpoint, slotIdx);
+    rerenderCompSection(country, touchpoint);
+    return;
+  }
+
+  // Competitor: 사진 삭제
+  const removeBtn = e.target.closest(".comp-img-remove");
+  if (removeBtn) {
+    e.stopPropagation();
+    const {country, touchpoint} = removeBtn.dataset;
+    const slotIdx = parseInt(removeBtn.dataset.slotIdx);
+    removeImg(country, touchpoint, slotIdx);
+    const area = removeBtn.closest(".comp-img-area");
+    if (area) clearImgArea(area);
+    return;
+  }
+
+  // Competitor: 이미지 영역 클릭 (업로드 or 라이트박스)
+  const area = e.target.closest(".comp-img-area");
+  if (!area) return;
+  const {key, country, touchpoint} = area.dataset;
+  const slotIdx = parseInt(area.dataset.slotIdx);
+  if (area.dataset.hasImg === "1") {
+    const slot = getSlots(country, touchpoint)[slotIdx] || {brand:"", copy:""};
+    openLightbox(getImg(country, touchpoint, slotIdx), slot.brand, slot.copy,
+      {key, country, touchpoint, slotIdx});
+  } else {
+    triggerUpload({key, country, touchpoint, slotIdx});
+  }
+});
+
+document.addEventListener("click", e => {
+  if (!e.target.closest(".risk-selector"))
+    document.querySelectorAll(".risk-dropdown.open").forEach(x => x.classList.remove("open"));
+});
+
+// ═══════════════════════════════════════════
+// IMAGE UPLOAD
+// ═══════════════════════════════════════════
+const fileInput = document.getElementById("fileInput");
+let pendingTarget = null;
+
+function triggerUpload(target) { pendingTarget = target; fileInput.value = ""; fileInput.click(); }
+
+fileInput.addEventListener("change", () => {
+  if (!fileInput.files[0] || !pendingTarget) return;
+  const {key, country, touchpoint, slotIdx} = pendingTarget;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    setImg(country, touchpoint, slotIdx, ev.target.result);
+    const area = document.querySelector(`.comp-img-area[data-key="${CSS.escape(key)}"]`);
+    if (area) {
+      const slot = getSlots(country, touchpoint)[slotIdx] || {brand:""};
+      const sb = String(slot.brand||"").replace(/"/g,"&quot;");
+      area.dataset.hasImg = "1";
+      area.innerHTML = `<img src="${ev.target.result}" alt="${sb}">
+        <div class="comp-img-overlay">
+          <span class="comp-overlay-label">🔍 크게 보기</span>
+          <span class="comp-overlay-label" style="font-size:9px;opacity:.8">클릭하여 교체</span>
+        </div>
+        <button class="comp-img-remove"
+          data-key="${CSS.escape(key)}" data-country="${country}" data-touchpoint="${touchpoint}" data-slot-idx="${slotIdx}" title="사진 삭제">✕</button>`;
+    }
+    closeLightbox(); pendingTarget = null;
+    showToast("이미지가 저장됐습니다", "success");
+  };
+  reader.readAsDataURL(fileInput.files[0]);
+});
+
+function clearImgArea(area) {
+  area.dataset.hasImg = "0";
+  area.innerHTML = `<div class="comp-img-placeholder"><span class="comp-img-icon">📷</span><span>사진 추가</span></div>`;
+}
+
+let lbPending = null;
+function openLightbox(src, brand, copy, target) {
+  lbPending = target;
+  document.getElementById("lbImg").src = src;
+  document.getElementById("lbBrand").textContent = brand;
+  document.getElementById("lbCopy").textContent  = copy;
+  document.getElementById("lightbox").style.display = "flex";
+}
+function closeLightbox() {
+  document.getElementById("lightbox").style.display = "none";
+  document.getElementById("lbImg").src = ""; lbPending = null;
+}
+document.getElementById("lbBackdrop").addEventListener("click", closeLightbox);
+document.getElementById("lbClose").addEventListener("click", closeLightbox);
+document.getElementById("lbReplace").addEventListener("click", () => { if (lbPending) triggerUpload(lbPending); });
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeLightbox(); closeSyncModal(); } });
+
+// ═══════════════════════════════════════════
+// FILTERS
+// ═══════════════════════════════════════════
+function setupFilters(groupId, stateKey) {
+  document.getElementById(groupId).querySelectorAll(".btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.getElementById(groupId).querySelectorAll(".btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      filterState[stateKey] = btn.dataset[stateKey==="touchpoint"?"touchpoint":stateKey];
+      renderCards();
+    });
+  });
+}
+setupFilters("countryFilters","country");
+setupFilters("touchpointFilters","touchpoint");
+setupFilters("riskFilters","risk");
+
+// ═══════════════════════════════════════════
+// GOOGLE SHEETS SYNC — 자동 동기화
+// ═══════════════════════════════════════════
+let appsScriptUrl = "";
+try { appsScriptUrl = localStorage.getItem("dermaAppsScriptUrl") || ""; } catch {}
+
+let sheetsTimer = null;
+
+function scheduleSheetsPush() {
+  if (!appsScriptUrl) return;
+  clearTimeout(sheetsTimer);
+  sheetsTimer = setTimeout(() => _pushToSheets(), 2000);
+}
+
+function updateSyncStatus(type) {
+  const el = document.getElementById("syncStatus");
+  if (!appsScriptUrl) {
+    el.textContent = "연동 미설정"; el.className = "sync-status"; return;
+  }
+  if (type === "loading") {
+    el.textContent = "⏳ 동기화 중..."; el.className = "sync-status"; return;
+  }
+  if (type === "error") {
+    el.textContent = "⚠️ 동기화 오류"; el.className = "sync-status"; return;
+  }
+  if (type === "ok") {
+    const t = new Date().toLocaleTimeString("ko-KR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+    el.textContent = "✅ 동기화 완료 " + t; el.className = "sync-status connected"; return;
+  }
+  // idle (URL 있지만 아직 동기화 전)
+  el.textContent = "🔗 연동 대기 중"; el.className = "sync-status connected";
+}
+updateSyncStatus("idle");
+
+// ── 데이터 수집 ─────────────────────────────
+function getAllReviewData() {
+  const rows = [];
+  DATA.forEach(d => {
+    d.claims.forEach((claim, idx) => {
+      const rv = getReview(d, idx);
+      rows.push({country:d.country, touchpoint:d.touchpoint, claimIdx:idx, claim,
+                 risk:rv.risk, review:rv.review, reviewer:rv.reviewer, date:rv.date});
+    });
+  });
+  return rows;
+}
+
+function getAllCompData() {
+  const rows = [];
+  DATA.forEach(d => {
+    const slots = getSlots(d.country, d.touchpoint);
+    slots.forEach((slot, idx) => {
+      rows.push({country:d.country, touchpoint:d.touchpoint, slotIdx:idx,
+                 brand:slot.brand||"", copy:slot.copy||""});
+    });
+  });
+  return rows;
+}
+
+// ── Sheets에서 받아 적용 ─────────────────────
+function applyReviewRows(rows) {
+  rows.forEach(row => {
+    if (!row.country || !row.touchpoint) return;
+    const k = storeKey(row.country, row.touchpoint, parseInt(row.claimIdx));
+    reviewStore[k] = {
+      risk:     row.risk     || "⬜",
+      review:   row.review   || "",
+      reviewer: row.reviewer || "",
+      date:     row.date     || "",
+    };
+  });
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(reviewStore)); } catch {}
+}
+
+function applyCompRows(rows) {
+  const grouped = {};
+  rows.forEach(r => {
+    const k = compKey(r.country, r.touchpoint);
+    if (!grouped[k]) grouped[k] = [];
+    const i = parseInt(r.slotIdx);
+    if (!isNaN(i)) grouped[k][i] = {brand:r.brand||"", copy:r.copy||""};
+  });
+  Object.entries(grouped).forEach(([k, arr]) => {
+    compStore[k] = arr.filter(Boolean);
+  });
+  try { localStorage.setItem(COMP_STORE_KEY, JSON.stringify(compStore)); } catch {}
+}
+
+// ── Sheets로 올리기 (내부 자동) ──────────────
+async function _pushToSheets() {
+  if (!appsScriptUrl) return;
+  updateSyncStatus("loading");
+  try {
+    await Promise.all([
+      fetch(appsScriptUrl, {method:"POST", mode:"no-cors",
+        headers:{"Content-Type":"text/plain"},
+        body:JSON.stringify({type:"reviews", rows:getAllReviewData()})}),
+      fetch(appsScriptUrl, {method:"POST", mode:"no-cors",
+        headers:{"Content-Type":"text/plain"},
+        body:JSON.stringify({type:"comps", rows:getAllCompData()})}),
+    ]);
+    updateSyncStatus("ok");
+  } catch { updateSyncStatus("error"); }
+}
+
+// ── 수동 버튼 핸들러 ─────────────────────────
+async function syncToSheets() {
+  if (!appsScriptUrl) { openSyncModal(); return; }
+  const btn = document.getElementById("btnUp");
+  btn.disabled = true; btn.textContent = "⏳ 올리는 중...";
+  try {
+    await _pushToSheets();
+    showToast("✅ Google Sheets에 동기화 완료", "success");
+  } catch (err) {
+    showToast("전송 실패: " + err.message, "error");
+  } finally { btn.disabled = false; btn.textContent = "⬆ Sheets에 올리기"; }
+}
+
+async function syncFromSheets(silent = false) {
+  if (!appsScriptUrl) { if (!silent) openSyncModal(); return; }
+  const btn = document.getElementById("btnDown");
+  if (!silent) { btn.disabled = true; btn.textContent = "⏳ 받는 중..."; }
+  updateSyncStatus("loading");
+  try {
+    // 검토 데이터
+    const r1 = await fetch(appsScriptUrl + "?action=getReviews", {mode:"cors"});
+    const d1 = await r1.json();
+    if (d1.rows && d1.rows.length) applyReviewRows(d1.rows);
+    // 타사 사례 데이터
+    const r2 = await fetch(appsScriptUrl + "?action=getComps", {mode:"cors"});
+    const d2 = await r2.json();
+    if (d2.rows && d2.rows.length) applyCompRows(d2.rows);
+
+    updateSyncStatus("ok");
+    renderCards();
+    if (!silent) showToast(`⬇ Sheets에서 데이터를 불러왔습니다`, "success");
+  } catch (err) {
+    updateSyncStatus("error");
+    if (!silent) showToast("불러오기 실패: " + err.message, "error");
+  } finally {
+    if (!silent) { btn.disabled = false; btn.textContent = "⬇ Sheets에서 받기"; }
+  }
+}
+
+function exportCSV() {
+  const rows   = getAllReviewData();
+  const header = ["국가","접점","문안번호","문안","리스크","검토의견","담당자","검토일"];
+  const lines  = [header,...rows.map(r=>[
+    r.country, r.touchpoint, "문안"+(r.claimIdx+1), r.claim,
+    r.risk, r.review, r.reviewer, r.date
+  ])].map(row => row.map(c=>`"${String(c||"").replace(/"/g,'""')}"`).join(","));
+  const blob = new Blob(["﻿"+lines.join("\n")],{type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "ANUA_더마_클레임_검토_"+new Date().toISOString().slice(0,10)+".csv";
+  a.click();
+  showToast("📊 CSV 파일 다운로드됨","success");
+}
+
+// ═══════════════════════════════════════════
+// SYNC MODAL
+// ═══════════════════════════════════════════
+function openSyncModal() {
+  document.getElementById("appsScriptUrlInput").value = appsScriptUrl;
+  document.getElementById("urlTestResult").textContent = "";
+  document.getElementById("syncModal").style.display = "flex";
+}
+function closeSyncModal() { document.getElementById("syncModal").style.display = "none"; }
+document.getElementById("syncModal").addEventListener("click", e => { if(e.target===e.currentTarget) closeSyncModal(); });
+
+async function saveAndTestUrl() {
+  const url = document.getElementById("appsScriptUrlInput").value.trim();
+  const result = document.getElementById("urlTestResult");
+  const inp    = document.getElementById("appsScriptUrlInput");
+  if (!url.startsWith("https://script.google.com/")) {
+    result.textContent = "❌ 올바른 Apps Script URL이 아닙니다.";
+    result.style.color = "var(--red)"; inp.className="url-input error"; return;
+  }
+  result.textContent = "⏳ 연결 테스트 중..."; result.style.color = "var(--muted)";
+  try {
+    const res  = await fetch(url + "?action=getReviews", {mode:"cors"});
+    const data = await res.json();
+    appsScriptUrl = url;
+    localStorage.setItem("dermaAppsScriptUrl", url);
+    updateSyncStatus("idle");
+    inp.className = "url-input valid";
+    const cnt = data.rows ? data.rows.length : "?";
+    result.textContent = `✅ 연결 성공! (${cnt}개 행) — 데이터를 불러옵니다...`;
+    result.style.color = "var(--green)";
+    // 연결 성공 시 자동으로 Sheets 데이터 Pull
+    setTimeout(() => { closeSyncModal(); syncFromSheets(false); }, 1200);
+  } catch(err) {
+    result.textContent = "⚠️ 연결 실패. Apps Script 배포 설정을 확인해 주세요. (" + err.message + ")";
+    result.style.color = "var(--red)"; inp.className="url-input error";
+  }
+}
+
+function copyAppsScriptCode() {
+  navigator.clipboard.writeText(document.getElementById("appsScriptCode").textContent)
+    .then(() => showToast("📋 코드 복사됨","success"));
+}
+
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+let toastTimer = null;
+function showToast(msg, type="") {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.className = "toast"+(type?" "+type:"");
+  void t.offsetWidth; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2800);
+}
+
+// ═══════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════
+renderCards();
+// Sheets URL이 설정돼 있으면 페이지 로드 시 자동 불러오기
+if (appsScriptUrl) {
+  setTimeout(() => syncFromSheets(true), 600);
+}
+</script>
+</body>
+</html>
