@@ -153,6 +153,25 @@ body{font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",sans-seri
 .autosave-dot{width:5px;height:5px;border-radius:50%;background:var(--green);display:none;margin-left:auto;flex-shrink:0}
 .autosave-dot.visible{display:block}
 
+/* ── REVIEW IMAGE ATTACHMENTS ── */
+.review-imgs-area{display:flex;flex-wrap:wrap;gap:5px;padding:6px 0 2px;align-items:flex-end}
+.review-img-thumb{position:relative;width:52px;height:52px;border-radius:6px;overflow:hidden;border:1px solid var(--border);cursor:pointer;flex-shrink:0;transition:box-shadow .12s}
+.review-img-thumb:hover{box-shadow:0 2px 8px rgba(0,0,0,.15)}
+.review-img-thumb img{width:100%;height:100%;object-fit:cover;display:block;transition:opacity .12s}
+.review-img-thumb:hover img{opacity:.8}
+.review-img-del{position:absolute;top:2px;right:2px;background:rgba(200,40,40,.88);color:#fff;border:none;border-radius:50%;width:15px;height:15px;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s;z-index:3;padding:0;line-height:1;font-family:inherit}
+.review-img-thumb:hover .review-img-del{opacity:1}
+.review-img-add{display:flex;gap:4px;align-items:center}
+.review-img-upload-btn,.review-img-url-btn{border:1px dashed #C0C8D8;background:#F8FAFC;border-radius:6px;padding:3px 8px;font-size:10px;font-family:inherit;color:var(--muted);cursor:pointer;transition:all .12s;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
+.review-img-upload-btn:hover,.review-img-url-btn:hover{border-color:var(--navy);color:var(--navy);background:#EEF2FF;border-style:solid}
+.review-img-url-input-wrap{display:flex;gap:4px;align-items:center;flex:1;min-width:0}
+.review-img-url-inp{flex:1;border:1px solid var(--border);border-radius:5px;padding:3px 7px;font-size:10px;font-family:inherit;outline:none;min-width:0;transition:border-color .15s}
+.review-img-url-inp:focus{border-color:var(--navy)}
+.review-img-url-ok{background:var(--navy);color:#fff;border:none;border-radius:5px;padding:3px 8px;font-size:10px;font-family:inherit;cursor:pointer;white-space:nowrap;transition:background .12s}
+.review-img-url-ok:hover{background:#2a2a55}
+.review-img-url-cancel{background:none;border:1px solid var(--border);color:var(--muted);border-radius:5px;padding:3px 7px;font-size:10px;font-family:inherit;cursor:pointer;transition:all .12s}
+.review-img-url-cancel:hover{border-color:var(--red);color:var(--red)}
+
 /* Evidence */
 .evidence-box{background:#F0F4FF;border-radius:8px;padding:8px 11px;font-size:11.5px;color:#2C3E6A;line-height:1.55}
 
@@ -469,6 +488,7 @@ function out(data) {
 
 <div id="toast" class="toast"></div>
 <input type="file" id="fileInput" accept="image/*" style="display:none">
+<input type="file" id="reviewImgFileInput" accept="image/*" style="display:none">
 
 <script>
 // ═══════════════════════════════════════════
@@ -602,6 +622,62 @@ function normalize(r) {
 
 function countryLabel(c) {
   return {북미:"🇺🇸 북미",유럽:"🇪🇺 유럽",일본:"🇯🇵 일본",한국:"🇰🇷 한국"}[c] || c;
+}
+
+// ═══════════════════════════════════════════
+// REVIEW IMAGE ATTACHMENTS
+// ═══════════════════════════════════════════
+const REVIEW_IMGS_KEY = "dermaReviewImgs_v1";
+let reviewImgsStore = {};
+try { reviewImgsStore = JSON.parse(localStorage.getItem(REVIEW_IMGS_KEY)) || {}; } catch {}
+
+function rimgsKey(country, touchpoint, claimIdx) {
+  return country + "__" + touchpoint + "__" + claimIdx;
+}
+function getReviewImgs(country, touchpoint, claimIdx) {
+  return reviewImgsStore[rimgsKey(country, touchpoint, claimIdx)] || [];
+}
+function saveReviewImgs() {
+  try { localStorage.setItem(REVIEW_IMGS_KEY, JSON.stringify(reviewImgsStore)); }
+  catch { showToast("이미지 저장 실패 (용량 초과)", "error"); }
+}
+function addReviewImg(country, touchpoint, claimIdx, src) {
+  const k = rimgsKey(country, touchpoint, claimIdx);
+  if (!reviewImgsStore[k]) reviewImgsStore[k] = [];
+  reviewImgsStore[k].push({src});
+  saveReviewImgs();
+}
+function removeReviewImg(country, touchpoint, claimIdx, imgIdx) {
+  const k = rimgsKey(country, touchpoint, claimIdx);
+  if (reviewImgsStore[k]) { reviewImgsStore[k].splice(imgIdx, 1); saveReviewImgs(); }
+}
+
+function buildReviewImgsArea(country, touchpoint, claimIdx) {
+  const esc  = s => String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+  const imgs = getReviewImgs(country, touchpoint, claimIdx);
+  const aId  = `rimgs-${country}-${String(touchpoint).replace(/[\s⚠️]/g,"_")}-${claimIdx}`;
+  const thumbs = imgs.map((img, i) => `
+    <div class="review-img-thumb"
+      data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}" data-claim-idx="${claimIdx}" data-img-idx="${i}">
+      <img src="${esc(img.src)}" alt="검토이미지${i+1}">
+      <button class="review-img-del" tabindex="-1"
+        data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}" data-claim-idx="${claimIdx}" data-img-idx="${i}">✕</button>
+    </div>`).join("");
+  return `<div class="review-imgs-area" id="${aId}">
+    ${thumbs}
+    <div class="review-img-add">
+      <button class="review-img-upload-btn"
+        data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}" data-claim-idx="${claimIdx}">📁 파일</button>
+      <button class="review-img-url-btn"
+        data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}" data-claim-idx="${claimIdx}">🔗 링크</button>
+    </div>
+  </div>`;
+}
+
+function rerenderReviewImgs(country, touchpoint, claimIdx) {
+  const aId = `rimgs-${country}-${String(touchpoint).replace(/[\s⚠️]/g,"_")}-${claimIdx}`;
+  const el  = document.getElementById(aId);
+  if (el) el.outerHTML = buildReviewImgsArea(country, touchpoint, claimIdx);
 }
 
 // ═══════════════════════════════════════════
@@ -818,6 +894,7 @@ function buildCard(d) {
             value="${esc(rv.date)}">
           <span class="autosave-dot" id="${dotId}"></span>
         </div>
+        ${buildReviewImgsArea(d.country, d.touchpoint, idx)}
       </div>
     </div>`;
   }).join("");
@@ -911,6 +988,85 @@ document.getElementById("cardGrid").addEventListener("click", e => {
     document.querySelectorAll(".risk-dropdown.open").forEach(x => x.classList.remove("open"));
   }
 
+  // ── 검토 이미지: 파일 업로드 ──────────────
+  const rimgUpBtn = e.target.closest(".review-img-upload-btn");
+  if (rimgUpBtn) {
+    e.stopPropagation();
+    const {country, touchpoint} = rimgUpBtn.dataset;
+    const ci = parseInt(rimgUpBtn.dataset.claimIdx);
+    pendingReviewImgTarget = {country, touchpoint, claimIdx: ci};
+    reviewImgFileInput.value = ""; reviewImgFileInput.click();
+    return;
+  }
+
+  // ── 검토 이미지: URL 링크 버튼 → 인라인 입력 ─
+  const rimgUrlBtn = e.target.closest(".review-img-url-btn");
+  if (rimgUrlBtn) {
+    e.stopPropagation();
+    const {country, touchpoint} = rimgUrlBtn.dataset;
+    const ci  = parseInt(rimgUrlBtn.dataset.claimIdx);
+    const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/"/g,"&quot;");
+    const addArea = rimgUrlBtn.closest(".review-img-add");
+    if (addArea) {
+      addArea.innerHTML = `<div class="review-img-url-input-wrap">
+        <input class="review-img-url-inp" type="url" placeholder="이미지 URL (https://...)">
+        <button class="review-img-url-ok"
+          data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}" data-claim-idx="${ci}">확인</button>
+        <button class="review-img-url-cancel"
+          data-country="${esc(country)}" data-touchpoint="${esc(touchpoint)}" data-claim-idx="${ci}">✕</button>
+      </div>`;
+      addArea.querySelector(".review-img-url-inp")?.focus();
+    }
+    return;
+  }
+
+  // ── 검토 이미지: URL 확인 ─────────────────
+  const rimgOk = e.target.closest(".review-img-url-ok");
+  if (rimgOk) {
+    e.stopPropagation();
+    const {country, touchpoint} = rimgOk.dataset;
+    const ci  = parseInt(rimgOk.dataset.claimIdx);
+    const inp = rimgOk.closest(".review-img-url-input-wrap")?.querySelector(".review-img-url-inp");
+    const url = inp?.value?.trim();
+    if (url) addReviewImg(country, touchpoint, ci, url);
+    rerenderReviewImgs(country, touchpoint, ci);
+    return;
+  }
+
+  // ── 검토 이미지: URL 취소 ─────────────────
+  const rimgCancel = e.target.closest(".review-img-url-cancel");
+  if (rimgCancel) {
+    e.stopPropagation();
+    const {country, touchpoint} = rimgCancel.dataset;
+    const ci = parseInt(rimgCancel.dataset.claimIdx);
+    rerenderReviewImgs(country, touchpoint, ci);
+    return;
+  }
+
+  // ── 검토 이미지: 삭제 버튼 ───────────────
+  const rimgDel = e.target.closest(".review-img-del");
+  if (rimgDel) {
+    e.stopPropagation();
+    const {country, touchpoint} = rimgDel.dataset;
+    const ci = parseInt(rimgDel.dataset.claimIdx);
+    const ii = parseInt(rimgDel.dataset.imgIdx);
+    removeReviewImg(country, touchpoint, ci, ii);
+    rerenderReviewImgs(country, touchpoint, ci);
+    return;
+  }
+
+  // ── 검토 이미지: 썸네일 클릭 (라이트박스) ─
+  const rimgThumb = e.target.closest(".review-img-thumb");
+  if (rimgThumb && !e.target.closest(".review-img-del")) {
+    e.stopPropagation();
+    const {country, touchpoint} = rimgThumb.dataset;
+    const ci = parseInt(rimgThumb.dataset.claimIdx);
+    const ii = parseInt(rimgThumb.dataset.imgIdx);
+    const imgs = getReviewImgs(country, touchpoint, ci);
+    if (imgs[ii]) openLightbox(imgs[ii].src, `검토 참고 이미지 ${ii+1}`, "", null, false);
+    return;
+  }
+
   // Competitor: 슬롯 추가
   const addBtn = e.target.closest(".comp-add-btn");
   if (addBtn) {
@@ -995,17 +1151,46 @@ fileInput.addEventListener("change", () => {
   reader.readAsDataURL(fileInput.files[0]);
 });
 
+// ── 검토 이미지 파일 업로드 핸들러 ──────────
+const reviewImgFileInput = document.getElementById("reviewImgFileInput");
+let pendingReviewImgTarget = null;
+
+reviewImgFileInput.addEventListener("change", () => {
+  if (!reviewImgFileInput.files[0] || !pendingReviewImgTarget) return;
+  const {country, touchpoint, claimIdx} = pendingReviewImgTarget;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    addReviewImg(country, touchpoint, claimIdx, ev.target.result);
+    rerenderReviewImgs(country, touchpoint, claimIdx);
+    showToast("📎 이미지가 첨부됐습니다", "success");
+    pendingReviewImgTarget = null;
+  };
+  reader.readAsDataURL(reviewImgFileInput.files[0]);
+});
+
+// URL 입력란에서 Enter 키 처리
+document.getElementById("cardGrid").addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    const inp = e.target.closest(".review-img-url-inp");
+    if (inp) {
+      e.preventDefault();
+      inp.closest(".review-img-url-input-wrap")?.querySelector(".review-img-url-ok")?.click();
+    }
+  }
+});
+
 function clearImgArea(area) {
   area.dataset.hasImg = "0";
   area.innerHTML = `<div class="comp-img-placeholder"><span class="comp-img-icon">📷</span><span>사진 추가</span></div>`;
 }
 
 let lbPending = null;
-function openLightbox(src, brand, copy, target) {
+function openLightbox(src, brand, copy, target, showReplace = true) {
   lbPending = target;
   document.getElementById("lbImg").src = src;
   document.getElementById("lbBrand").textContent = brand;
   document.getElementById("lbCopy").textContent  = copy;
+  document.getElementById("lbReplace").style.display = showReplace ? "" : "none";
   document.getElementById("lightbox").style.display = "flex";
 }
 function closeLightbox() {
