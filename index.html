@@ -307,6 +307,7 @@ body{font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",sans-seri
     <button class="sync-btn" onclick="syncFromSheets()" id="btnDown">⬇ Sheets에서 받기</button>
     <button class="sync-btn primary" onclick="syncToSheets()" id="btnUp">⬆ Sheets에 올리기</button>
     <button class="sync-btn green-btn" onclick="exportCSV()">📊 CSV 내보내기</button>
+    <button class="sync-btn" onclick="loadCompRef()" id="btnCompRef" title="Google Sheets 경쟁사 참고 탭에서 브랜드 데이터 가져오기">📋 경쟁사 참고 가져오기</button>
     <button class="sync-btn" onclick="openSyncModal()">⚙ 연동 설정</button>
   </div>
 </div>
@@ -355,7 +356,7 @@ body{font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",sans-seri
         <div class="code-block">
           <button class="copy-code-btn" onclick="copyAppsScriptCode()">복사</button>
           <pre id="appsScriptCode">function doGet(e) {
-  var action = e.parameter.action || 'getReviews';
+  var action = (e && e.parameter && e.parameter.action) || 'getReviews';
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   if (action === 'getReviews') {
     var sh = ss.getSheetByName('검토현황') || ss.insertSheet('검토현황');
@@ -365,6 +366,11 @@ body{font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",sans-seri
     var sh = ss.getSheetByName('타사레퍼런스');
     if (!sh) return out({type:'comps', rows:[]});
     return sheetToJson(sh, 'comps');
+  }
+  if (action === 'getCompRef') {
+    var sh = ss.getSheetByName('경쟁사 참고');
+    if (!sh) return out({type:'compRef', rows:[]});
+    return sheetToJson(sh, 'compRef');
   }
   return out({error:'unknown action'});
 }
@@ -439,7 +445,7 @@ function out(data) {
             <div class="step-item"><span class="step-num" style="background:#00AD9F;font-size:9px">2</span><span>HTML 파일을 드래그앤드롭 → 즉시 공개 URL 발급</span></div>
           </div>
           <div style="margin-top:10px;background:#FEF3C7;border-radius:6px;padding:8px 11px;font-size:11px;color:#92400E">
-            ⚠️ 배포 후 모든 접속자가 <b>⚙ 연동 설정</b>에서 동일한 Apps Script URL 입력 필요 (최초 1회).<br>이후 접속부터 Sheets 데이터가 자동으로 로드됩니다.
+            ⚠️ <b>팀 공용 URL 설정법 (권장):</b> Apps Script 배포 후 HTML 파일 소스에서 <code style="background:rgba(0,0,0,.08);padding:1px 4px;border-radius:3px">DEFAULT_APPS_SCRIPT_URL</code> 상수 값을 웹앱 URL로 바꾸면, 외부 링크로 접속하는 모든 팀원이 별도 설정 없이 자동으로 Google Sheets와 연동됩니다.<br><br>또는 각 접속자가 <b>⚙ 연동 설정</b>에서 동일한 URL을 직접 입력하는 방법도 가능합니다.
           </div>
         </div>
       </div>
@@ -1031,8 +1037,10 @@ setupFilters("riskFilters","risk");
 // ═══════════════════════════════════════════
 // GOOGLE SHEETS SYNC — 자동 동기화
 // ═══════════════════════════════════════════
+// ▼ 팀 공용 Apps Script URL — 여기에 입력하면 외부 공유 접속자 모두에게 자동 적용됩니다
+const DEFAULT_APPS_SCRIPT_URL = ""; // ← Apps Script 배포 후 웹앱 URL을 여기에 붙여넣기
 let appsScriptUrl = "";
-try { appsScriptUrl = localStorage.getItem("dermaAppsScriptUrl") || ""; } catch {}
+try { appsScriptUrl = localStorage.getItem("dermaAppsScriptUrl") || DEFAULT_APPS_SCRIPT_URL; } catch {}
 
 let sheetsTimer = null;
 
@@ -1114,6 +1122,96 @@ function applyCompRows(rows) {
     compStore[k] = arr.filter(Boolean);
   });
   try { localStorage.setItem(COMP_STORE_KEY, JSON.stringify(compStore)); } catch {}
+}
+
+// ─────────────────────────────────────────────
+// 경쟁사 참고 탭 — 기본 데이터 (Google Sheets "경쟁사 참고" 탭 내용)
+// ─────────────────────────────────────────────
+const COMP_REF_TOUCHPOINTS = ["제품 패키지","브랜드 공식 홈페이지","온라인 판매 상세페이지","오프라인 VMD"];
+
+const COMP_REF_DEFAULTS = [
+  // 북미
+  {국가:"북미", 브랜드:"CeraVe",         "제품 패키지":"Developed With Dermatologists",       "브랜드 공식 홈페이지":"Developed with dermatologists",    "온라인 판매 상세페이지":"Dermatologist-developed / barrier science", "오프라인 VMD":"병원·학회·리테일 연계"},
+  {국가:"북미", 브랜드:"La Roche-Posay", "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  {국가:"북미", 브랜드:"Curél",           "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  {국가:"북미", 브랜드:"AESTURA",         "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  // 유럽
+  {국가:"유럽", 브랜드:"Bioderma",        "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  {국가:"유럽", 브랜드:"La Roche-Posay", "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  {국가:"유럽", 브랜드:"Eucerin",         "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  // 일본
+  {국가:"일본", 브랜드:"Curél",           "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  {국가:"일본", 브랜드:"La Roche-Posay", "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  {국가:"일본", 브랜드:"AESTURA",         "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  // 한국
+  {국가:"한국", 브랜드:"La Roche-Posay", "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  {국가:"한국", 브랜드:"Physiogel",       "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  {국가:"한국", 브랜드:"AESTURA",         "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+  {국가:"한국", 브랜드:"Bioderma",        "제품 패키지":"", "브랜드 공식 홈페이지":"", "온라인 판매 상세페이지":"", "오프라인 VMD":""},
+];
+
+// Sheets "경쟁사 참고" rows → compStore (덮어쓰기 모드, 명시적 가져오기 시 사용)
+function applyCompRefRows(rows) {
+  const grouped = {};
+  rows.forEach(row => {
+    const country = (row["국가"] || row["country"] || "").trim();
+    const brand   = (row["브랜드"] || row["brand"]   || "").trim();
+    if (!country || !brand) return;
+    COMP_REF_TOUCHPOINTS.forEach(tp => {
+      const k = compKey(country, tp);
+      if (!grouped[k]) grouped[k] = [];
+      grouped[k].push({brand, copy: (row[tp] || "").trim()});
+    });
+  });
+  Object.entries(grouped).forEach(([k, slots]) => { compStore[k] = slots; });
+  try { localStorage.setItem(COMP_STORE_KEY, JSON.stringify(compStore)); } catch {}
+}
+
+// 페이지 로드 시 — 저장 데이터가 없거나 모두 빈 슬롯인 접점에만 기본 경쟁사 데이터 적용
+function initCompDefaults() {
+  let changed = false;
+  const grouped = {};
+  COMP_REF_DEFAULTS.forEach(row => {
+    COMP_REF_TOUCHPOINTS.forEach(tp => {
+      const k = compKey(row["국가"], tp);
+      if (!grouped[k]) grouped[k] = [];
+      grouped[k].push({brand: row["브랜드"], copy: row[tp] || ""});
+    });
+  });
+  Object.entries(grouped).forEach(([k, slots]) => {
+    const existing = compStore[k];
+    // 기존 데이터가 없거나, 모든 슬롯에 브랜드명이 없을 때만 기본값 적용
+    const isEmpty = !existing || existing.every(s => !s.brand);
+    if (isEmpty) { compStore[k] = slots; changed = true; }
+  });
+  if (changed) {
+    try { localStorage.setItem(COMP_STORE_KEY, JSON.stringify(compStore)); } catch {}
+  }
+}
+
+// "경쟁사 참고 가져오기" 버튼 — Sheets에서 경쟁사 참고 탭 데이터를 가져와 슬롯에 반영
+async function loadCompRef(silent = false) {
+  if (!appsScriptUrl) {
+    if (!silent) showToast("⚙ 먼저 Google Sheets 연동 설정이 필요합니다", "warn");
+    return;
+  }
+  const btn = document.getElementById("btnCompRef");
+  if (btn) { btn.disabled = true; btn.textContent = "⏳ 가져오는 중..."; }
+  try {
+    const res  = await fetch(appsScriptUrl + "?action=getCompRef", {mode:"cors"});
+    const data = await res.json();
+    if (data.rows && data.rows.length) {
+      applyCompRefRows(data.rows);
+      renderCards();
+      if (!silent) showToast(`📋 경쟁사 참고 ${data.rows.length}개 브랜드 데이터가 적용됐습니다`, "success");
+    } else {
+      if (!silent) showToast("'경쟁사 참고' 시트에 데이터가 없습니다", "warn");
+    }
+  } catch(err) {
+    if (!silent) showToast("경쟁사 참고 불러오기 실패: " + err.message, "error");
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = "📋 경쟁사 참고 가져오기"; }
+  }
 }
 
 // ── Sheets로 올리기 (내부 자동) ──────────────
@@ -1245,6 +1343,7 @@ function showToast(msg, type="") {
 // ═══════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════
+initCompDefaults(); // 경쟁사 참고 기본 데이터 — 비어있는 접점에만 적용
 renderCards();
 // Sheets URL이 설정돼 있으면 페이지 로드 시 자동 불러오기
 if (appsScriptUrl) {
