@@ -251,11 +251,89 @@ body{font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",sans-seri
 .empty-state{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)}
 .empty-state .icon{font-size:48px;margin-bottom:12px}
 
+/* ── TAB BAR ── */
+.tab-bar{display:flex;gap:0;padding:0 28px;background:#fff;border-bottom:2px solid var(--border)}
+.tab-btn{border:none;background:none;padding:11px 20px;font-size:13px;font-weight:700;font-family:inherit;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;display:flex;align-items:center;gap:6px}
+.tab-btn:hover{color:var(--navy)}
+.tab-btn.active{color:var(--navy);border-bottom-color:var(--navy)}
+
+/* ── CONCLUSION VIEW ── */
+.conclusion-wrap{padding:20px 28px 50px;display:flex;flex-direction:column;gap:28px}
+
+/* Summary strip */
+.conc-kpi-row{display:flex;gap:10px;flex-wrap:wrap}
+.conc-kpi{flex:1;min-width:120px;background:#fff;border-radius:12px;border:1px solid var(--border);padding:14px 18px;display:flex;flex-direction:column;gap:4px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.conc-kpi .ck-num{font-size:32px;font-weight:800;line-height:1}
+.conc-kpi .ck-label{font-size:11px;color:var(--muted);font-weight:600}
+.conc-kpi.green{border-top:4px solid var(--green)}.conc-kpi.green .ck-num{color:var(--green)}
+.conc-kpi.yellow{border-top:4px solid var(--yellow)}.conc-kpi.yellow .ck-num{color:var(--yellow)}
+.conc-kpi.red{border-top:4px solid var(--red)}.conc-kpi.red .ck-num{color:var(--red)}
+.conc-kpi.gray{border-top:4px solid #aaa}.conc-kpi.gray .ck-num{color:#777}
+.conc-progress{background:#fff;border-radius:12px;border:1px solid var(--border);padding:14px 18px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.conc-progress-label{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:7px;display:flex;justify-content:space-between}
+.progress-bar-track{height:10px;background:#F0F0F0;border-radius:6px;overflow:hidden;display:flex;gap:1px}
+.progress-bar-seg{height:100%;transition:width .4s}
+
+/* Risk matrix */
+.conc-section-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.conc-section-title::after{content:"";flex:1;height:1px;background:var(--border)}
+.risk-matrix-wrap{overflow-x:auto}
+.risk-matrix{width:100%;border-collapse:collapse;font-size:11.5px;min-width:500px}
+.risk-matrix th{background:var(--navy2);color:#fff;padding:9px 12px;font-weight:700;font-size:11px;text-align:center;white-space:nowrap}
+.risk-matrix th:first-child{text-align:left;padding-left:16px;min-width:110px}
+.risk-matrix td{padding:9px 12px;border:1px solid var(--border);text-align:center;vertical-align:middle}
+.risk-matrix td:first-child{font-weight:700;font-size:12px;text-align:left;padding-left:16px;background:#FAFBFC;white-space:nowrap}
+.risk-matrix tr:hover td{background:#F8FAFD}
+.risk-matrix tr:hover td:first-child{background:#F0F4FF}
+.matrix-cell{display:flex;gap:3px;justify-content:center;flex-wrap:wrap}
+.matrix-chip{font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:6px;white-space:nowrap}
+.mc-green{background:#D6F5D6;color:#1B6B1B}
+.mc-yellow{background:#FFF8CC;color:#7A5F00}
+.mc-red{background:#FFD6D6;color:#8B0000}
+.mc-gray{background:#ECECEC;color:#777}
+.mc-red-bg{background:#FFE8E8!important}
+.mc-green-bg{background:#EDF9ED!important}
+.mc-yellow-bg{background:#FFFBEA!important}
+
+/* Action items */
+.action-list{display:flex;flex-direction:column;gap:10px}
+.action-card{border-radius:10px;border:1.5px solid var(--border);overflow:hidden}
+.action-card.red-card{border-color:#F5CCCC}
+.action-card.yellow-card{border-color:#E8DA80}
+.action-card.green-card{border-color:#B8EAC8}
+.action-header{padding:10px 14px;display:flex;align-items:center;gap:8px;font-weight:700;font-size:12px}
+.action-card.red-card .action-header{background:#FEF5F5;color:#8B0000}
+.action-card.yellow-card .action-header{background:#FDFCE8;color:#7A5F00}
+.action-card.green-card .action-header{background:#F0FBF3;color:#1B6B1B}
+.action-body{padding:10px 14px;font-size:11.5px;line-height:1.6;color:var(--text)}
+.action-claims{display:flex;flex-direction:column;gap:5px}
+.action-claim-row{display:flex;gap:8px;align-items:flex-start;padding:5px 8px;background:#fff;border-radius:6px;border:1px solid var(--border)}
+.action-claim-text{flex:1;font-size:11px;color:var(--text);line-height:1.5}
+.action-review-note{font-size:10.5px;color:var(--muted);font-style:italic;margin-top:2px;padding-top:4px;border-top:1px dashed var(--border)}
+
+/* Country summary */
+.country-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(460px,1fr));gap:16px}
+.country-summary-card{background:#fff;border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,.05);overflow:hidden}
+.cs-header{padding:12px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);background:#FAFBFC}
+.cs-country-badge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:10px;color:#fff}
+.cs-risk-bar{display:flex;gap:4px;margin-left:auto}
+.cs-table{width:100%;border-collapse:collapse;font-size:11px}
+.cs-table th{background:#F4F6F8;padding:6px 10px;font-weight:700;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;text-align:left;border-bottom:1px solid var(--border)}
+.cs-table td{padding:7px 10px;border-bottom:1px solid #F0F0F0;vertical-align:top}
+.cs-table tr:last-child td{border-bottom:none}
+.cs-tp-name{font-weight:700;font-size:11px;color:var(--text);white-space:nowrap}
+.cs-claims-col{display:flex;gap:3px;flex-wrap:wrap}
+.cs-claim-badge{font-size:9.5px;font-weight:700;padding:2px 7px;border-radius:6px;cursor:pointer;transition:opacity .12s;white-space:nowrap}
+.cs-claim-badge:hover{opacity:.8}
+.cs-note{font-size:10px;color:var(--muted);font-style:italic;line-height:1.4;max-width:300px}
+.cs-note.has-note{color:#5A4A00}
+
 /* ── PRINT ── */
 @media print{
-  .controls,.summary-bar,.sync-bar,.top-header{position:static}
-  .card{break-inside:avoid;box-shadow:none}
+  .controls,.summary-bar,.sync-bar,.top-header,.tab-bar{position:static}
+  .card,.country-summary-card,.action-card{break-inside:avoid;box-shadow:none}
   .grid{grid-template-columns:1fr 1fr}
+  .country-summary-grid{grid-template-columns:1fr 1fr}
   body{background:#fff}
   .lightbox,.modal-overlay,.toast{display:none!important}
   .review-textarea{border:1px solid #ccc;resize:none}
@@ -340,8 +418,14 @@ body{font-family:"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo",sans-seri
   <div class="legend-item" style="margin-left:auto;font-size:10px;color:var(--green)">✏️ 문안별 신호등·검토 의견 직접 수정 · 자동 저장</div>
 </div>
 
-<div class="results-info">표시 중: <strong id="visibleCount">0</strong>개 카드 · <strong id="visibleClaims">0</strong>개 문안</div>
+<div class="tab-bar">
+  <button class="tab-btn active" data-tab="review" onclick="switchTab('review')">📋 검토 현황</button>
+  <button class="tab-btn" data-tab="conclusion" onclick="switchTab('conclusion')">📊 결론 요약</button>
+</div>
+
+<div class="results-info" id="resultsInfo">표시 중: <strong id="visibleCount">0</strong>개 카드 · <strong id="visibleClaims">0</strong>개 문안</div>
 <div class="grid" id="cardGrid"></div>
+<div id="conclusionView" style="display:none"></div>
 
 <!-- SYNC MODAL -->
 <div id="syncModal" class="modal-overlay" style="display:none">
@@ -843,6 +927,8 @@ function renderCards() {
   }
 
   grid.innerHTML = filtered.map(d => buildCard(d)).join("");
+  // 결론 탭이 열려 있으면 자동 갱신
+  if (currentTab === "conclusion") buildConclusionView();
 }
 
 function buildCard(d) {
@@ -1511,6 +1597,261 @@ async function saveAndTestUrl() {
 function copyAppsScriptCode() {
   navigator.clipboard.writeText(document.getElementById("appsScriptCode").textContent)
     .then(() => showToast("📋 코드 복사됨","success"));
+}
+
+// ═══════════════════════════════════════════
+// TAB SWITCHING + CONCLUSION VIEW
+// ═══════════════════════════════════════════
+let currentTab = "review";
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  const isReview = tab === "review";
+  document.getElementById("cardGrid").style.display      = isReview ? "" : "none";
+  document.getElementById("resultsInfo").style.display   = isReview ? "" : "none";
+  document.getElementById("conclusionView").style.display = isReview ? "none" : "";
+  // filter/controls only relevant on review tab
+  document.querySelector(".controls").style.display      = isReview ? "" : "none";
+  if (!isReview) buildConclusionView();
+}
+
+// ── 결론 뷰 메인 빌더 ──────────────────────────
+function buildConclusionView() {
+  const el = document.getElementById("conclusionView");
+  if (!el) return;
+
+  // 전체 카운트 집계
+  const counts = {"🟢":0,"🟡":0,"🔴":0,"⬜":0};
+  const allReviewed = [];   // {d, claimIdx, rv}
+  DATA.forEach(d => d.claims.forEach((claim, idx) => {
+    const rv = getReview(d, idx);
+    const r  = normalize(rv.risk);
+    counts[r]++;
+    allReviewed.push({d, claim, idx, rv, risk: r});
+  }));
+  const total = allReviewed.length;
+  const reviewed = counts["🟢"] + counts["🟡"] + counts["🔴"];
+  const pct = total > 0 ? Math.round(reviewed/total*100) : 0;
+
+  el.innerHTML = `<div class="conclusion-wrap">
+    ${buildConcKPI(counts, total, pct)}
+    <div>
+      <div class="conc-section-title">📊 리스크 매트릭스 — 국가 × 고객 접점</div>
+      <div class="risk-matrix-wrap">${buildRiskMatrix(allReviewed)}</div>
+    </div>
+    ${buildActionSection(allReviewed)}
+    <div>
+      <div class="conc-section-title">🗂 국가별 상세 검토 요약</div>
+      <div class="country-summary-grid">${buildAllCountrySummaries(allReviewed)}</div>
+    </div>
+  </div>`;
+}
+
+// ── KPI 카드 + 진행률 바 ──────────────────────
+function buildConcKPI(counts, total, pct) {
+  const segments = [
+    {r:"🔴", cls:"seg-red",   color:"#E74C3C", w: counts["🔴"]},
+    {r:"🟡", cls:"seg-yel",   color:"#F39C12", w: counts["🟡"]},
+    {r:"🟢", cls:"seg-green", color:"#27AE60", w: counts["🟢"]},
+    {r:"⬜", cls:"seg-gray",  color:"#D5D8DC", w: counts["⬜"]},
+  ].filter(s => s.w > 0);
+  const barSegs = segments.map(s =>
+    `<div class="progress-bar-seg" style="width:${(s.w/total*100).toFixed(1)}%;background:${s.color}"></div>`
+  ).join("");
+  return `
+  <div class="conc-kpi-row">
+    <div class="conc-kpi green"><div class="ck-num">${counts["🟢"]}</div><div class="ck-label">🟢 통과 (사용 가능)</div></div>
+    <div class="conc-kpi yellow"><div class="ck-num">${counts["🟡"]}</div><div class="ck-label">🟡 조건부 (조건 충족 후)</div></div>
+    <div class="conc-kpi red"><div class="ck-num">${counts["🔴"]}</div><div class="ck-label">🔴 불통 (대체 문안 필요)</div></div>
+    <div class="conc-kpi gray"><div class="ck-num">${counts["⬜"]}</div><div class="ck-label">⬜ 검토 대기</div></div>
+  </div>
+  <div class="conc-progress">
+    <div class="conc-progress-label">
+      <span>전체 검토 진행률</span>
+      <span style="color:var(--navy);font-weight:800">${total - counts["⬜"]} / ${total}건 완료 (${pct}%)</span>
+    </div>
+    <div class="progress-bar-track">${barSegs}</div>
+  </div>`;
+}
+
+// ── 리스크 매트릭스 테이블 ────────────────────
+function buildRiskMatrix(allReviewed) {
+  const TOUCHPOINTS = ["제품 패키지","브랜드 공식 홈페이지","온라인 판매 상세페이지","오프라인 VMD"];
+  const TP_SHORT = {"제품 패키지":"📦 패키지","브랜드 공식 홈페이지":"🌐 홈페이지","온라인 판매 상세페이지":"🛒 PDP","오프라인 VMD":"🏪 VMD"};
+  const COUNTRIES = [{c:"북미",cc:"usa",flag:"🇺🇸"},{c:"유럽",cc:"eu",flag:"🇪🇺"},{c:"일본",cc:"jp",flag:"🇯🇵"},{c:"한국",cc:"kr",flag:"🇰🇷"}];
+
+  // group by country+touchpoint
+  const matrix = {};
+  allReviewed.forEach(({d, risk}) => {
+    // skip banned rows in matrix body (handled separately)
+    const key = d.country + "|" + d.touchpoint;
+    if (!matrix[key]) matrix[key] = {"🟢":0,"🟡":0,"🔴":0,"⬜":0};
+    matrix[key][risk]++;
+  });
+
+  function cellHTML(country, tp) {
+    const key = country + "|" + tp;
+    const m = matrix[key] || {"🟢":0,"🟡":0,"🔴":0,"⬜":0};
+    const chips = [
+      m["🔴"] ? `<span class="matrix-chip mc-red">🔴 ${m["🔴"]}</span>` : "",
+      m["🟡"] ? `<span class="matrix-chip mc-yellow">🟡 ${m["🟡"]}</span>` : "",
+      m["🟢"] ? `<span class="matrix-chip mc-green">🟢 ${m["🟢"]}</span>` : "",
+      m["⬜"] ? `<span class="matrix-chip mc-gray">⬜ ${m["⬜"]}</span>` : "",
+    ].filter(Boolean).join("");
+    const bg = m["🔴"] > 0 ? "mc-red-bg" : m["🟡"] > 0 ? "mc-yellow-bg" : m["🟢"] === 3 ? "mc-green-bg" : "";
+    return `<td class="${bg}"><div class="matrix-cell">${chips}</div></td>`;
+  }
+
+  function rowTotal(country) {
+    const t = {"🟢":0,"🟡":0,"🔴":0,"⬜":0};
+    allReviewed.filter(x => x.d.country === country).forEach(x => t[x.risk]++);
+    return [
+      t["🔴"] ? `<span class="matrix-chip mc-red">🔴 ${t["🔴"]}</span>` : "",
+      t["🟡"] ? `<span class="matrix-chip mc-yellow">🟡 ${t["🟡"]}</span>` : "",
+      t["🟢"] ? `<span class="matrix-chip mc-green">🟢 ${t["🟢"]}</span>` : "",
+      t["⬜"] ? `<span class="matrix-chip mc-gray">⬜ ${t["⬜"]}</span>` : "",
+    ].filter(Boolean).join(" ");
+  }
+
+  const headerCols = TOUCHPOINTS.map(tp => `<th>${TP_SHORT[tp] || tp}</th>`).join("");
+  const rows = COUNTRIES.map(({c, cc, flag}) => {
+    const tpCells = TOUCHPOINTS.map(tp => cellHTML(c, tp)).join("");
+    return `<tr>
+      <td><span class="country-badge country-${cc}" style="font-size:10px">${flag} ${c}</span></td>
+      ${tpCells}
+      <td style="white-space:nowrap"><div class="matrix-cell">${rowTotal(c)}</div></td>
+    </tr>`;
+  }).join("");
+
+  return `<table class="risk-matrix">
+    <thead><tr><th>국가 / 접점</th>${headerCols}<th>국가 합계</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ── 필수 조치 / 검토 완료 섹션 ────────────────
+function buildActionSection(allReviewed) {
+  const red    = allReviewed.filter(x => x.risk === "🔴");
+  const yellow = allReviewed.filter(x => x.risk === "🟡");
+  const green  = allReviewed.filter(x => x.risk === "🟢");
+
+  function groupByCountryTP(items) {
+    const groups = {};
+    items.forEach(x => {
+      const key = x.d.country + " · " + x.d.touchpoint;
+      if (!groups[key]) groups[key] = {label:key, country:x.d.country, tp:x.d.touchpoint, items:[]};
+      groups[key].items.push(x);
+    });
+    return Object.values(groups);
+  }
+
+  function renderGroup(group, cardClass) {
+    const ccMap = {북미:"usa",유럽:"eu",일본:"jp",한국:"kr"};
+    const claims = group.items.map(x => {
+      const noteHTML = x.rv.review
+        ? `<div class="action-review-note">💬 ${x.rv.review}${x.rv.reviewer ? ` — <b>${x.rv.reviewer}</b>` : ""}${x.rv.date ? ` (${x.rv.date})` : ""}</div>`
+        : "";
+      return `<div class="action-claim-row">
+        <span class="risk-badge ${riskInfo(x.risk).cls}" style="pointer-events:none;flex-shrink:0">${riskInfo(x.risk).l}</span>
+        <div class="action-claim-text">${x.claim}${noteHTML}</div>
+      </div>`;
+    }).join("");
+    const cc = ccMap[group.country] || "usa";
+    return `<div class="action-card ${cardClass}">
+      <div class="action-header">
+        <span class="country-badge country-${cc}" style="font-size:10px">${countryLabel(group.country)}</span>
+        <span>${group.tp}</span>
+        <span style="margin-left:auto;font-size:10px;opacity:.7">${group.items.length}건</span>
+      </div>
+      <div class="action-body"><div class="action-claims">${claims}</div></div>
+    </div>`;
+  }
+
+  const redGroups    = groupByCountryTP(red);
+  const yellowGroups = groupByCountryTP(yellow);
+  const greenGroups  = groupByCountryTP(green);
+
+  let html = "";
+
+  if (red.length) {
+    html += `<div>
+      <div class="conc-section-title" style="color:#C0392B">🔴 사용 불가 — 즉시 대체 문안 필요 (${red.length}건)</div>
+      <div class="action-list">${redGroups.map(g => renderGroup(g,"red-card")).join("")}</div>
+    </div>`;
+  }
+  if (yellow.length) {
+    html += `<div>
+      <div class="conc-section-title" style="color:#E67E22">🟡 조건부 사용 가능 — 조건 확인 후 사용 (${yellow.length}건)</div>
+      <div class="action-list">${yellowGroups.map(g => renderGroup(g,"yellow-card")).join("")}</div>
+    </div>`;
+  }
+  if (green.length) {
+    html += `<div>
+      <div class="conc-section-title" style="color:#27AE60">🟢 검토 통과 — 사용 가능 문안 (${green.length}건)</div>
+      <div class="action-list">${greenGroups.map(g => renderGroup(g,"green-card")).join("")}</div>
+    </div>`;
+  }
+  if (!red.length && !yellow.length && !green.length) {
+    html += `<div style="text-align:center;padding:30px;color:var(--muted);font-size:12px">아직 검토 완료된 문안이 없습니다. 검토 현황 탭에서 문안별 리스크를 설정해 주세요.</div>`;
+  }
+  return html;
+}
+
+// ── 국가별 상세 요약 ──────────────────────────
+function buildAllCountrySummaries(allReviewed) {
+  const COUNTRIES = [{c:"북미",cc:"usa",flag:"🇺🇸"},{c:"유럽",cc:"eu",flag:"🇪🇺"},{c:"일본",cc:"jp",flag:"🇯🇵"},{c:"한국",cc:"kr",flag:"🇰🇷"}];
+  const TOUCHPOINTS = ["제품 패키지","브랜드 공식 홈페이지","온라인 판매 상세페이지","오프라인 VMD","⚠️ 절대 불가 문안"];
+  const TP_ICON = {"제품 패키지":"📦","브랜드 공식 홈페이지":"🌐","온라인 판매 상세페이지":"🛒","오프라인 VMD":"🏪","⚠️ 절대 불가 문안":"⚠️"};
+  const esc = s => String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;");
+
+  return COUNTRIES.map(({c, cc, flag}) => {
+    const countryItems = allReviewed.filter(x => x.d.country === c);
+    const ct = {"🟢":0,"🟡":0,"🔴":0,"⬜":0};
+    countryItems.forEach(x => ct[x.risk]++);
+    const totalC = countryItems.length;
+
+    const tpRows = TOUCHPOINTS.map(tp => {
+      const items = countryItems.filter(x => x.d.touchpoint === tp);
+      if (!items.length) return "";
+
+      const badges = items.map(x => {
+        const ri = riskInfo(x.risk);
+        const shortClaim = x.claim.replace(/^[①②③]\s*/,"").substring(0,22) + (x.claim.length > 25 ? "…":"");
+        return `<span class="cs-claim-badge ${ri.cls}" title="${esc(x.claim)}">${Array.from(x.risk)[0]} ${esc(shortClaim)}</span>`;
+      }).join("");
+
+      // Aggregate note: use first non-empty note
+      const firstNote = items.find(x => x.rv.review)?.rv.review || "";
+      const noteHTML = firstNote
+        ? `<div class="cs-note has-note" title="${esc(firstNote)}">💬 ${esc(firstNote.substring(0,80))}${firstNote.length>80?"…":""}</div>`
+        : `<div class="cs-note">—</div>`;
+
+      return `<tr>
+        <td class="cs-tp-name">${TP_ICON[tp]||""} ${tp.replace("⚠️ 절대 불가 문안","절대 불가")}</td>
+        <td><div class="cs-claims-col">${badges}</div>${noteHTML}</td>
+      </tr>`;
+    }).filter(Boolean).join("");
+
+    const riskChips = [
+      ct["🔴"] ? `<span class="matrix-chip mc-red">🔴 ${ct["🔴"]}</span>` : "",
+      ct["🟡"] ? `<span class="matrix-chip mc-yellow">🟡 ${ct["🟡"]}</span>` : "",
+      ct["🟢"] ? `<span class="matrix-chip mc-green">🟢 ${ct["🟢"]}</span>` : "",
+      ct["⬜"] ? `<span class="matrix-chip mc-gray">⬜ ${ct["⬜"]}</span>` : "",
+    ].filter(Boolean).join(" ");
+
+    return `<div class="country-summary-card">
+      <div class="cs-header">
+        <span class="cs-country-badge country-${cc}">${flag} ${c}</span>
+        <span style="font-size:11px;color:var(--muted)">총 ${totalC}건</span>
+        <div class="cs-risk-bar">${riskChips}</div>
+      </div>
+      <table class="cs-table">
+        <thead><tr><th style="width:110px">접점</th><th>클레임 현황 · 검토 의견</th></tr></thead>
+        <tbody>${tpRows}</tbody>
+      </table>
+    </div>`;
+  }).join("");
 }
 
 // ═══════════════════════════════════════════
